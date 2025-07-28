@@ -2,7 +2,7 @@
 Here we have cleanly defined all the directories we have created with desc of why they exist.
 """
 import pathlib as pa
-import SETTINGS
+from Whatsapp import SETTINGS
 
 #-----------------------------------------------------------------------------------------------------------------------
 rootDir = pa.Path(__file__).resolve().parent
@@ -11,19 +11,24 @@ sessionDir.mkdir(exist_ok=True)
 _initialized_profiles = set()
 #-----------------------------------------------------------------------------------------------------------------------
 
-
 def designatedProfile(profile: str) -> pa.Path:
     """
-    Creates base profile directory and Logs, Race subfolders.
+    Creates base profile directory and base files (Logs.txt, Race.txt, trace.txt),
+    along with savedLogin/ folder for persistence.
     Returns the profile directory path.
     """
     pwd = sessionDir / f"{profile}_Profile"
     pwd.mkdir(exist_ok=True)
 
-    (pwd / "Logs").mkdir(exist_ok=True)
-    (pwd / "Race").mkdir(exist_ok=True)
-    (pwd / "trace").mkdir(exist_ok=True)
+    # Create file-based logs instead of directories
+    for f_name in ["Logs.txt", "Race.txt", "trace.txt"]:
+        file_path = pwd / f_name
+        if not file_path.exists():
+            file_path.touch()
+
+    # savedLogin remains a directory (used by persistence logic)
     (pwd / "savedLogin").mkdir(exist_ok=True)
+    (pwd / "trace").mkdir(exist_ok=True)
 
     _initialized_profiles.add(profile)
     return pwd
@@ -35,17 +40,43 @@ def ensureProfile(profile: str) -> pa.Path:
     return sessionDir / f"{profile}_Profile"
 
 
-def getTraceDir(profile: str = SETTINGS.PROFILE) -> pa.Path:
+#------------------------------------ File Path Getters ------------------------------------#
+
+def getLogsFile(profile: str = SETTINGS.PROFILE) -> pa.Path:
+    return ensureProfile(profile) / "Logs.txt"
+
+def getTraceFile(profile: str = SETTINGS.PROFILE) -> pa.Path:
     return ensureProfile(profile) / "trace"
 
-
-def getLogsDir(profile: str = SETTINGS.PROFILE) -> pa.Path:
-    return ensureProfile(profile) / "Logs"
-
-
-def getRaceDir(profile: str = SETTINGS.PROFILE) -> pa.Path:
-    return ensureProfile(profile) / "Race"
-
+def getRaceFile(profile: str = SETTINGS.PROFILE) -> pa.Path:
+    return ensureProfile(profile) / "Race.txt"
 
 def getSavedLoginDir(profile: str = SETTINGS.PROFILE) -> pa.Path:
     return ensureProfile(profile) / "savedLogin"
+
+def get_saved_data_ids(profile : str = SETTINGS.PROFILE) -> pa.Path:
+    return ensureProfile(profile) / "SEEN_IDS.pkl"
+
+def get_ban_list(profile : str = SETTINGS.PROFILE) -> pa.Path:
+    return ensureProfile(profile) / "BANLIST.pkl"
+
+#------------------------------------ Utility Write Helpers ------------------------------------#
+
+def append_to_file(file_path: pa.Path, message: str):
+    """
+    Appends a line to the file (adds newline automatically).
+    """
+    with file_path.open("a", encoding="utf-8") as f:
+        f.write(message + "\n")
+
+def write_to_file(file_path: pa.Path, content: str):
+    """
+    Overwrites the entire file with given content.
+    usage : only when we need to rewrite the log file.
+    """
+    file_path.write_text(content, encoding="utf-8")
+
+#------------------------------------ Example Usage ------------------------------------#
+# append_to_file(getLogsFile("myProfile"), "Session started at 12:00 AM")
+# append_to_file(getTraceFile("myProfile"), "Trace ID: #001")
+# write_to_file(getRaceFile("myProfile"), "Race event reset.")

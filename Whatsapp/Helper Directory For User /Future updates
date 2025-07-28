@@ -1,0 +1,36 @@
+-- Banlist update
+In this update we will be able to ban a certain chat | grp
+hence no command will be processed in that banned chat unless the admin | bot number un-ban that chat | grp
+usage : spam stop by setting a specific grp | chat to ban.
+
+---------------------------------------------------------
+-- Media Send
+In this update we will Update the media send logic stability
+Will add Video sending , Image , Document
+
+---------------------------------------------------------
+-- Other Media Detection
+In this agent will be able to detect media , not only text
+media : gif , sticker [ plain , animated , lottie animated] , image , video , 1 send
+
+---------------------------------------------------------
+-- Mouse Movement
+All over the whatsapp whether from send to click or hover it will simulate real humanized path.
+Till now it did not had any human mouse path, only robotic way of directly clicking
+
+---------------------------------------------------------
+-- System Stability
+Enhanced Core logic , different from the Old " Tweakio " version based on java
+Enhanced performance , Efficient , Security
+Enhanced Designing and more Flexibility at the runtime ( while running you can change many things without touching code again)
+
+---------------------------------------------------------
+Drop Ur Ideas :
+-- Don't be hesitant to drop the idea in the pull request or via messaging , just add a pull request and drop ur idea
+-- Make sure u explain ur idea simply and briefly
+-- Also add the usages of that idea while any other benefits .
+
+Also if you like this bot make sure to give a star , it motivates to work further and keep maintaining! (^_^)
+Thanks ! Enjoy "Tweakio_py" !!!
+Regards --> BITS-Rohit
+

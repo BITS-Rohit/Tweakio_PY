@@ -5,34 +5,37 @@ import time
 import playwright.sync_api
 import pathlib as pa
 
-from Whatsapp import Selectors_Config as sc, SETTINGS
+from Whatsapp import selectors_config as sc, SETTINGS,Brain
 from Whatsapp.BrowserManager import CusBrowser
+from  playwright.sync_api import Page
 
 #-----------------------------------------------------------------------------------------------------------------------
-preferred_login_method = SETTINGS.LOGIN_METHOD
+# preferred_login_method = SETTINGS.LOGIN_METHOD
+preferred_login_method = 1
 browser = CusBrowser.getInstance()
 debug = SETTINGS.DEBUG
+Mess_load_time = None # we will update it dynamically for the login part
 #-----------------------------------------------------------------------------------------------------------------------
 
 
-def login() -> None:
+def login() -> Page:
     page = browser.new_page()
-
-    if page.url != "https://web.whatsapp.com/":
-        page.goto("https://web.whatsapp.com/")
-
-    time.sleep(random.randint(1,2))
+    page.goto("https://web.whatsapp.com/",timeout=60_000)
+    page.wait_for_load_state(state="networkidle",timeout=50_000)
+    print("Network is idle.")
 
     def scanner_login() -> None:
         canvas = sc.qr_canvas(page)
         try:
-            # If QR canvas is visible, we haven't logged in yet
-            if canvas.is_visible(timeout=random.randint(1000, 2000)):
+            time.sleep(2) # Time for canvas to be visible
+            if canvas.is_visible():
                 if preferred_login_method == 1:
                     # Wait for a chat list after QR scan
+                    print("Waiting for QR scan")
                     sc.chat_list(page).wait_for(timeout=SETTINGS.LOGIN_WAIT_TIME / 2, state="visible")
                 else:
                     # Click the "Login with phone number" button
+                    print("Initiating automated code login")
                     button = page.get_by_role("button", name=re.compile("log.*in.*phone number", re.I))
                     button.hover(timeout=random.randint(1000, 2000))
                     button.click()
@@ -59,14 +62,27 @@ def login() -> None:
                     input_box.hover()
                     input_box.type(SETTINGS.BOT_NUMBER,delay=random.randint(500,1000))
 
-
             else:
                 # Already logged in, wait for the chat list
+                print("Already Login | waiting for the chats to load.")
                 sc.chat_list(page).wait_for(timeout=SETTINGS.LOGIN_WAIT_TIME, state="visible")
+                print("Chats loaded success.")
+            print("Full Boot Success.")
         except Exception as e:
-            print(f"Login error: {e}")
+            print("Can't Login...")
+            print(f"Login error from scanner_login // login \n : {e}")
 
     scanner_login()
+
+    time.sleep(5) # pop up rendering time
+    if sc.startup_popup(page).is_visible():
+        sc.startup_popup(page).hover()
+        sc.startup_popup(page).click()
+        print("Popup seen\nClicked Continue")
+    else:
+        print("No Popup seen")
+    return page
+
 
 def monitorThread(page : playwright.sync_api.Page) -> None :
     while(True) :
@@ -82,3 +98,34 @@ def cleanFolder(folder: pa.Path) -> None:
                 item.unlink()
             elif item.is_dir():
                 shutil.rmtree(item)
+
+def keep_alive():
+    print("Browser is live. Waiting for commands...")
+    while True:
+        cmd = input(">> ")
+        if cmd.lower() == "exit" or cmd.lower()=="q" :
+            browser.close()
+            break
+
+if __name__ == "__main__" :
+    page = login()
+    Brain.Start_Handling(page)
+    keep_alive()
+
+    # print("Login success")
+    # chats = sc.chat_items(page)
+    # print("No of chats : %d" % (chats.count()))
+    # for i in range(0 , chats.count()):
+    #     chat  = chats.nth(i)
+    #     print(f"Currently on chat {i+1}")
+    #     chat.hover()
+    #     chat.click()
+    #
+    # sc.chat_list_filters_ALL(page).hover()
+    # sc.chat_list_filters_favorites(page).hover()
+    # sc.chat_list_filters_Unread(page).hover()
+    # sc.chat_list_filters_groups(page).hover()
+    #
+    # if sc.wa_icon(page).is_visible() : print("Visible wa icon")
+    # else : print("Not visible wa icon")
+

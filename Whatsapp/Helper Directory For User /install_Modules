@@ -1,0 +1,9 @@
+Modules required with command to use for this Agent:-
+
+-------------
+pip install playwright playwright-stealth
+playwright install
+pip install requests
+pip install python-dotenv
+pip install pyperclip
+-------------

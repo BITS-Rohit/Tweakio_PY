@@ -6,15 +6,17 @@ Stealth will be patched from the stealing.py [ just another file in the BrowserM
 Monkey Patching we will be doing
 """
 import threading
-from playwright.sync_api import sync_playwright, Page, Browser
+
+from playwright.sync_api import sync_playwright, Page
 
 import Whatsapp.BrowserManager.stealing as steal
-import Whatsapp.pre_dir as sys_dir
-from Whatsapp import SETTINGS
+from Whatsapp import SETTINGS, pre_dir
 
-#-----------------------------------------------------------------------------------------------------------------------
-traceDir = sys_dir.getTraceDir()
-#-----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
+traceDir = pre_dir.getTraceFile(SETTINGS.PROFILE)
+
+
+# -----------------------------------------------------------------------------------------------------------------------
 
 class CusBrowser:
     """
@@ -22,6 +24,9 @@ class CusBrowser:
     """
     _instance = None
     _lock = threading.Lock()
+
+    def __init__(self):
+        self.browser = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -32,21 +37,57 @@ class CusBrowser:
         return cls._instance
 
     def _init_browser(self):
-        print("🚀 Launching stealth Chromium instance...")
+        print("🚀 Launching persistent stealth Chromium instance...")
+
         self.playwright = sync_playwright().start()
-        self.browser: Browser = self.playwright.chromium.launch(
+
+        user_data_dir = pre_dir.getSavedLoginDir(SETTINGS.PROFILE)
+        self.context = self.playwright.chromium.launch_persistent_context(
+            slow_mo=0,
+            locale="en-US",
+            timezone_id="Asia/Kolkata",
+            geolocation={"longitude": 77.2090, "latitude": 28.6139},
+            permissions=["geolocation", "clipboard-read", "clipboard-write"],
+            # color_scheme="no-preference",  # or "dark" or light
+            is_mobile=False,
+            reduced_motion="no-preference",
+            forced_colors=None,  # or "active"
+            service_workers="allow",  # block
+            has_touch=False,
+            ignore_https_errors=True,
+            user_data_dir=user_data_dir,
+            devtools=False,
+            device_scale_factor=2.0,
             headless=False,
-            ignore_default_args=["--enable-automation"],
-            slow_mo=SETTINGS.SLOW_MO,
+            ignore_default_args=[
+                "--enable-automation",
+                "--no-sandbox",
+                "--disable-blink-features=AutomationControlled"
+            ],
             timeout=SETTINGS.BROWSER_INIT_TIMEOUT,
-            traces_dir=traceDir
-        )
-        self.context = self.browser.new_context(
+            traces_dir=traceDir,
+            args=[
+                "--disable-infobars",
+                "--window-size=1280,800"
+            ],
+            viewport={"width": 1280, "height":720 },
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
-            viewport={"width": 1920, "height": 1080},
-            java_script_enabled=True,
+            extra_http_headers=steal.headers,
+            java_script_enabled=True
         )
-        print("🧠 Chromium context initialized with stealth mode.")
+
+        try:
+            self.context.tracing.start(name=f"{SETTINGS.PROFILE}-trace")
+            print("-- Browser Tracing Started --")
+        except Exception as e:
+            if "Tracing has been already started" in str(e):
+                print("⚠️ Tracing already started — skipping.")
+            else:
+                raise Exception("Error in Tracing man")
+
+        self.page = self.context.pages[0] if self.context.pages else self.context.new_page()
+        print("🧠 Chromium persistent context initialized with stealth mode.")
+
 
     def new_page(self) -> Page:
         if self.context.pages and self.context.pages[0].url == "about:blank":
@@ -55,6 +96,7 @@ class CusBrowser:
             page = self.context.new_page()
 
         steal.stealth(page)
+        # steal.mouseUI(page)  # Mouse UI for visual simulation
         return page
 
     def close(self):
@@ -62,6 +104,7 @@ class CusBrowser:
         self.playwright.stop()
         CusBrowser._instance = None
         print("🧹 Browser closed and resources cleaned.")
+
 
 # Usage
 def getInstance():

@@ -1,22 +1,33 @@
-# Python
+# Python bytecode and build artifacts
 __pycache__/
 *.py[cod]
 *.egg
 *.egg-info/
 dist/
 build/
-.env
+
+# Python environments and dotenv
 .venv/
-ENV/
+.env
 *.env
 
-# PyCharm
+ENV/*
+!ENV/.gitkeep
+
+# PyCharm project settings
 .idea/
 
-# OS
+# OS-generated files
 .DS_Store
 Thumbs.db
 
-# Playwright
+# Personal/local test files
+ip.py
+playground.py
+
+# WhatsApp session data
+Whatsapp/Wa_Session
+
+# Playwright test artifacts
 test-results/
 playwright-report/

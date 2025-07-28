@@ -2,7 +2,7 @@ from playwright.sync_api import Page
 from playwright_stealth import Stealth
 
 
-def stealth(page: Page) -> Page:
+def stealth(page: Page) -> None:
     """
     Applies stealth techniques and JS spoofing to the given page.
     :return: Page itself
@@ -10,9 +10,34 @@ def stealth(page: Page) -> Page:
     s = Stealth()
     s.apply_stealth_sync(page)
     page.add_init_script(_custom_js_spoof_payload())
+    page.add_init_script(js)
+    # enable_mouse_ui(page)
     print("🕵️ Stealth and spoof scripts injected.")
-    return page
 
+js = """
+window.addEventListener('DOMContentLoaded', () => {
+  const dot = document.createElement('div');
+  dot.id = '__mouse_dot__';
+  Object.assign(dot.style, {
+    position: 'fixed',
+    width: '10px',
+    height: '10px',
+    borderRadius: '65%',
+    backgroundColor: 'black',
+    zIndex: '2147483647',  // Max z-index
+    pointerEvents: 'none',
+    top: '0px',
+    left: '0px',
+    transform: 'translate(-50%, -50%)',
+    transition: 'top 0.03s linear, left 0.03s linear'
+  });
+  document.body.appendChild(dot);
+  window.addEventListener('mousemove', e => {
+    dot.style.left = `${e.clientX}px`;
+    dot.style.top = `${e.clientY}px`;
+  });
+});
+"""
 
 def _custom_js_spoof_payload():
     """
@@ -91,20 +116,20 @@ def _custom_js_spoof_payload():
         Object.defineProperty(navigator, 'platform', { get: () => 'Linux x86_64' });
 
         // 🌐 Do Not Track
-        Object.defineProperty(navigator, 'doNotTrack', { get: () => '1' });
+        // Object.defineProperty(navigator, 'doNotTrack', { get: () => '1' });
 
         // 🪟 Screen and Window
-        Object.defineProperty(window, 'innerWidth', { get: () => 1920 });
-        Object.defineProperty(window, 'innerHeight', { get: () => 1080 });
-        Object.defineProperty(window, 'outerWidth', { get: () => 1920 });
-        Object.defineProperty(window, 'outerHeight', { get: () => 1080 });
-
-        Object.defineProperty(window.screen, 'width', { get: () => 1920 });
-        Object.defineProperty(window.screen, 'height', { get: () => 1080 });
-        Object.defineProperty(window.screen, 'availWidth', { get: () => 1920 });
-        Object.defineProperty(window.screen, 'availHeight', { get: () => 1040 });
-        Object.defineProperty(window.screen, 'colorDepth', { get: () => 24 });
-        Object.defineProperty(window.screen, 'pixelDepth', { get: () => 24 });
+        Object.defineProperty(window, 'innerWidth', { get: () => 1301 });
+        Object.defineProperty(window, 'innerHeight', { get: () => 724});
+        Object.defineProperty(window, 'outerWidth', { get: () => 1301 });
+        Object.defineProperty(window, 'outerHeight', { get: () => 724 });
+        
+        Object.defineProperty(window.screen, 'width', { get: () => 1301 });
+        Object.defineProperty(window.screen, 'height', { get: () => 724 });
+        Object.defineProperty(window.screen, 'availWidth', { get: () => 1301 });
+        Object.defineProperty(window.screen, 'availHeight', { get: () => 724 });
+        //Object.defineProperty(window.screen, 'colorDepth', { get: () => 24 });
+        //Object.defineProperty(window.screen, 'pixelDepth', { get: () => 24 });
 
         //  Fake Chrome object to prevent runtime errors
         window.chrome = {
@@ -115,7 +140,7 @@ def _custom_js_spoof_payload():
         // 🔍 matchMedia override (updated logic)
         const originalMatchMedia = window.matchMedia;
         window.matchMedia = function(query) {
-            const forcedMatch = /1920|1080|max\-width|min\-width|max\-height|min\-height/.test(query);
+            const forcedMatch = /1301|724|max\-width|min\-width|max\-height|min\-height/.test(query);
             return {
                 matches: forcedMatch,
                 media: query,
@@ -131,13 +156,115 @@ def _custom_js_spoof_payload():
     """
 
 
+headers = {
+    # ---- This is for the network calls
+    # "Content-Type": "application/json",
+    # "Origin": "https://www.example.com",
+    # "Referer": "https://www.example.com/home",
+
+    # "Sec-Ch-Ua": '"Chromium";v="120", "Google Chrome";v="120", "Not-A.Brand";v="99"',
+    # "Sec-Ch-Ua-Mobile": "?0", # 0, 1
+    # "Sec-Ch-Ua-Platform": "Windows", #Windows, macOS, Android
+    # "Viewport-Width": "1920", # Optional, but can help match screen
+
+    # "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    # "Accept-Encoding": "gzip, deflate, br",
+    # "Accept-Language": "en-US,en;q=0.9",
+    # "Cache-Control": "no-cache",
+    # "Upgrade-Insecure-Requests": "1",
+    # "DNT": "1",  # Do Not Track enabled
+    "Origin": "https://web.whatsapp.com",
+    "Referer": "https://web.whatsapp.com/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/138.0.0.0 Safari/537.36",
+
+    # "Sec-Fetch-Dest": "document",
+    # "Sec-Fetch-Mode": "navigate",
+    # "Sec-Fetch-Site": "none",
+    # "Sec-Fetch-User": "?1",
+}
+
+
+def mouseUI(page: Page) -> None:
+    page.add_init_script("""
+        (() => {
+            const dot = document.createElement('div');
+            dot.id = '__mouse_dot__';
+            Object.assign(dot.style, {
+                position: 'fixed',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: 'red',
+                zIndex: '2147483647',  // Max z-index
+                pointerEvents: 'none',
+                top: '0px',
+                left: '0px',
+                transform: 'translate(-50%, -50%)',
+                transition: 'top 0.03s linear, left 0.03s linear'
+            });
+            document.body.appendChild(dot);
+
+            window.addEventListener('mousemove', e => {
+                dot.style.left = `${e.clientX}px`;
+                dot.style.top = `${e.clientY}px`;
+            });
+        })();
+    """)
+
+
+def enable_mouse_ui(page: Page) -> None:
+    """
+    Injects a custom red dot cursor into the page and hides the native cursor.
+    Must be called *before* any navigation or interaction.
+    """
+    page.add_init_script("""
+    (() => {
+        // 1) Hide the native cursor everywhere
+        const style = document.createElement('style');
+        style.textContent = `* { cursor: none !important; }`;
+        document.head.appendChild(style);
+
+        // 2) Create the visible “mouse dot”
+        const dot = document.createElement('div');
+        dot.id = '__pw_mouse_dot__';
+        Object.assign(dot.style, {
+            position: 'fixed',
+            width: '8px',
+            height: '8px',
+            backgroundColor: 'red',
+            border: '2px solid white',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+            zIndex: '2147483647',
+            transform: 'translate(-50%, -50%)',
+            transition: 'transform 0.05s ease-out'
+        });
+        document.body.appendChild(dot);
+
+        // 3) Move on every pointer event (Playwright synthesizes pointer events)
+        window.addEventListener('pointermove', e => {
+            dot.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+        });
+
+        // 4) Flash on clicks for visibility
+        window.addEventListener('pointerdown', () => {
+            dot.style.transition += ', background-color 0.2s';
+            dot.style.backgroundColor = 'yellow';
+            setTimeout(() => dot.style.backgroundColor = 'red', 100);
+        });
+    })();
+    """)
+
+
 def _get_plugins_spoof_script() -> str:
     return r"""
         (() => {
             const fakePlugins = [
                 { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
-                { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '' },
-                { name: 'Native Client', filename: 'internal-nacl-plugin', description: '' },
+                { name: 'Chrome PDF Viewer', filename: 'excellent pdf viewer', description: 'Best PDF viewer ever' },
+                { name: 'Native Client', filename: 'internal-nacl-plugin', description: 'Client Native used for the client that needs client fakes' },
             ];
             Object.defineProperty(navigator, 'plugins', {
                 get: () => fakePlugins,
@@ -161,8 +288,8 @@ def _get_webgl_spoof_script() -> str:
         (() => {
             const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
             WebGLRenderingContext.prototype.getParameter = function(param) {
-                if (param === 37445) return 'Intel Inc.';       // UNMASKED_VENDOR_WEBGL
-                if (param === 37446) {                         // UNMASKED_RENDERER_WEBGL
+                if (param === 37445) return 'Intel Inc.';       
+                if (param === 37446) {                        
                     const choices = [
                       'Intel Iris OpenGL Engine',
                       'NVIDIA GeForce GTX 1060',
