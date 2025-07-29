@@ -8,14 +8,12 @@ Monkey Patching we will be doing
 import threading
 
 from playwright.sync_api import sync_playwright, Page
-
+import ip
 import Whatsapp.BrowserManager.stealing as steal
 from Whatsapp import SETTINGS, pre_dir
 
 # -----------------------------------------------------------------------------------------------------------------------
-traceDir = pre_dir.getTraceFile(SETTINGS.PROFILE)
-
-
+traces_dir = pre_dir.TraceStart()
 # -----------------------------------------------------------------------------------------------------------------------
 
 class CusBrowser:
@@ -37,6 +35,8 @@ class CusBrowser:
         return cls._instance
 
     def _init_browser(self):
+        ip.main() # IP configs
+        print("----------------------------------------------------------")
         print("🚀 Launching persistent stealth Chromium instance...")
 
         self.playwright = sync_playwright().start()
@@ -48,7 +48,7 @@ class CusBrowser:
             timezone_id="Asia/Kolkata",
             geolocation={"longitude": 77.2090, "latitude": 28.6139},
             permissions=["geolocation", "clipboard-read", "clipboard-write"],
-            # color_scheme="no-preference",  # or "dark" or light
+            # color_scheme="no-preference", # or "dark" or light
             is_mobile=False,
             reduced_motion="no-preference",
             forced_colors=None,  # or "active"
@@ -65,7 +65,7 @@ class CusBrowser:
                 "--disable-blink-features=AutomationControlled"
             ],
             timeout=SETTINGS.BROWSER_INIT_TIMEOUT,
-            traces_dir=traceDir,
+            traces_dir=traces_dir,
             args=[
                 "--disable-infobars",
                 "--window-size=1280,800"
@@ -77,8 +77,13 @@ class CusBrowser:
         )
 
         try:
-            self.context.tracing.start(name=f"{SETTINGS.PROFILE}-trace")
-            print("-- Browser Tracing Started --")
+            self.context.tracing.start(
+                name=f"{SETTINGS.PROFILE}_trace",
+                screenshots=True,
+                snapshots=True,
+                sources=True
+            )
+            print("#        -- Browser Tracing Started --        #")
         except Exception as e:
             if "Tracing has been already started" in str(e):
                 print("⚠️ Tracing already started — skipping.")
@@ -86,7 +91,7 @@ class CusBrowser:
                 raise Exception("Error in Tracing man")
 
         self.page = self.context.pages[0] if self.context.pages else self.context.new_page()
-        print("🧠 Chromium persistent context initialized with stealth mode.")
+        print("~~Chromium persistent context initialized with stealth mode~~")
 
 
     def new_page(self) -> Page:
@@ -96,12 +101,13 @@ class CusBrowser:
             page = self.context.new_page()
 
         steal.stealth(page)
-        # steal.mouseUI(page)  # Mouse UI for visual simulation
         return page
 
     def close(self):
-        self.browser.close()
-        self.playwright.stop()
+        if self.context:
+            self.context.close()
+        if self.playwright:
+            self.playwright.stop()
         CusBrowser._instance = None
         print("🧹 Browser closed and resources cleaned.")
 

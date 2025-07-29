@@ -3,7 +3,7 @@ import time
 
 from playwright.sync_api import Locator, Page
 
-from Whatsapp import SETTINGS, selectors_config as sc, Extra as ex, HumanAction as ha, ___, Methods as helper, \
+from Whatsapp import SETTINGS, selectors_config as sc, Extra as ex, HumanAction as ha, ___ as _, Methods as helper, \
     Reply as rep, post_process as process, pre_dir as pwd
 from Whatsapp.BrowserManager import CusBrowser
 
@@ -15,8 +15,6 @@ admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
               SETTINGS.NLP, SETTINGS.QUANTIFIER, "--ban--", "--unban--"]
 user_cmds = [SETTINGS.NLP, SETTINGS.QUANTIFIER, "showq", "...help"]
 pause_mode = False
-processed_ids = ___.seen_ids
-ban_list = ___.ban_list
 page = None
 
 
@@ -102,7 +100,7 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
     try:
         t = text.split(" ", 1)[0].lower().strip()
         print("Message : " + text)
-        if ban_list is None : print("None banlist")
+        if _.ban_list is None : print("None banlist")
         if admin_cmds is None : print("None admin cmds ")
         if user_cmds is None : print("None user cmds")
         data_id = sc.get_dataID(message)
@@ -111,18 +109,18 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
             print("Empty data-ID")
             return
 
-        if data_id in processed_ids:
+        if data_id in _.seen_ids:
             print("[Seen ID containing message]")
             return
 
-        ex.trace_message(processed_ids, chat, message)
+        ex.trace_message(_.seen_ids, chat, message)
         mess_out = sc.is_message_out(message)
 
         # --- Auth Checks ---
         auth = SETTINGS.GLOBAL_MODE or mess_out
         sender = ex.getSender(message).replace(" ", "").replace("+", "")
         print(f"Sender for p_auth: {sender}")
-        P_AUTH = sender in ___.admin_list
+        P_AUTH = sender in _.admin_list
 
         name = sc.getChatName(chat)
         print(f"Prefix : {t}")
@@ -142,8 +140,8 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
                 return
 
             if t == "--unban--":
-                if name in ban_list:
-                    ban_list.remove(name)
+                if name in _.ban_list:
+                    _.ban_list.remove(name)
                     print(f"✅ Unbanned chat: {name}")
                     rep.reply(page=page, locator=message, text=f"✅ Unbanned chat: {name}")
                 else:
@@ -151,15 +149,15 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
                 return
 
             elif t == "--ban--":
-                if name not in ban_list:
-                    ban_list.append(name)
+                if name not in _.ban_list:
+                    _.ban_list.append(name)
                     print(f"❌ Banned chat: {name}")
                     rep.reply(page=page, locator=message, text=f"❌ Banned chat: {name}")
                 else:
                     rep.reply(page=page, locator=message, text=f"`{name} is already in ban list.`")
                 return
 
-        if name in ban_list:
+        if name in _.ban_list:
             print("Banned chat. Returning.")
             return
 

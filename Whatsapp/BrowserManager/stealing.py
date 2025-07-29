@@ -10,11 +10,12 @@ def stealth(page: Page) -> None:
     s = Stealth()
     s.apply_stealth_sync(page)
     page.add_init_script(_custom_js_spoof_payload())
-    page.add_init_script(js)
-    # enable_mouse_ui(page)
-    print("🕵️ Stealth and spoof scripts injected.")
+    page.add_init_script(Mouse_UI)
+    print("[[Stealth and spoof scripts injected]]")
+    print("----------------------------------------------------------")
 
-js = """
+
+Mouse_UI = """
 window.addEventListener('DOMContentLoaded', () => {
   const dot = document.createElement('div');
   dot.id = '__mouse_dot__';
@@ -186,132 +187,4 @@ headers = {
 }
 
 
-def mouseUI(page: Page) -> None:
-    page.add_init_script("""
-        (() => {
-            const dot = document.createElement('div');
-            dot.id = '__mouse_dot__';
-            Object.assign(dot.style, {
-                position: 'fixed',
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: 'red',
-                zIndex: '2147483647',  // Max z-index
-                pointerEvents: 'none',
-                top: '0px',
-                left: '0px',
-                transform: 'translate(-50%, -50%)',
-                transition: 'top 0.03s linear, left 0.03s linear'
-            });
-            document.body.appendChild(dot);
 
-            window.addEventListener('mousemove', e => {
-                dot.style.left = `${e.clientX}px`;
-                dot.style.top = `${e.clientY}px`;
-            });
-        })();
-    """)
-
-
-def enable_mouse_ui(page: Page) -> None:
-    """
-    Injects a custom red dot cursor into the page and hides the native cursor.
-    Must be called *before* any navigation or interaction.
-    """
-    page.add_init_script("""
-    (() => {
-        // 1) Hide the native cursor everywhere
-        const style = document.createElement('style');
-        style.textContent = `* { cursor: none !important; }`;
-        document.head.appendChild(style);
-
-        // 2) Create the visible “mouse dot”
-        const dot = document.createElement('div');
-        dot.id = '__pw_mouse_dot__';
-        Object.assign(dot.style, {
-            position: 'fixed',
-            width: '8px',
-            height: '8px',
-            backgroundColor: 'red',
-            border: '2px solid white',
-            borderRadius: '50%',
-            pointerEvents: 'none',
-            zIndex: '2147483647',
-            transform: 'translate(-50%, -50%)',
-            transition: 'transform 0.05s ease-out'
-        });
-        document.body.appendChild(dot);
-
-        // 3) Move on every pointer event (Playwright synthesizes pointer events)
-        window.addEventListener('pointermove', e => {
-            dot.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-        });
-
-        // 4) Flash on clicks for visibility
-        window.addEventListener('pointerdown', () => {
-            dot.style.transition += ', background-color 0.2s';
-            dot.style.backgroundColor = 'yellow';
-            setTimeout(() => dot.style.backgroundColor = 'red', 100);
-        });
-    })();
-    """)
-
-
-def _get_plugins_spoof_script() -> str:
-    return r"""
-        (() => {
-            const fakePlugins = [
-                { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
-                { name: 'Chrome PDF Viewer', filename: 'excellent pdf viewer', description: 'Best PDF viewer ever' },
-                { name: 'Native Client', filename: 'internal-nacl-plugin', description: 'Client Native used for the client that needs client fakes' },
-            ];
-            Object.defineProperty(navigator, 'plugins', {
-                get: () => fakePlugins,
-                configurable: true
-            });
-            Object.defineProperty(navigator, 'mimeTypes', {
-                get: () => fakePlugins.map(p => ({
-                    type: p.name.toLowerCase().split(' ').join('/'),
-                    suffixes: '',
-                    description: p.description,
-                    enabledPlugin: p
-                })),
-                configurable: true
-            });
-        })();
-        """
-
-
-def _get_webgl_spoof_script() -> str:
-    return r"""
-        (() => {
-            const originalGetParameter = WebGLRenderingContext.prototype.getParameter;
-            WebGLRenderingContext.prototype.getParameter = function(param) {
-                if (param === 37445) return 'Intel Inc.';       
-                if (param === 37446) {                        
-                    const choices = [
-                      'Intel Iris OpenGL Engine',
-                      'NVIDIA GeForce GTX 1060',
-                      'AMD Radeon Pro 560X OpenGL Engine'
-                    ];
-                    return choices[Math.floor(Math.random()*choices.length)];
-                }
-                return originalGetParameter.apply(this, arguments);
-            };
-        })();
-        """
-
-
-# WhatsApp specific for stopping the update writing and making it a persistent version.
-"""
-Object.defineProperty(navigator.serviceWorker, 'register', {
-    value: () => Promise.resolve(),
-    writable: false,
-    configurable: true,
-});
-
-Object.defineProperty(Notification, 'permission', {
-                get: () => 'granted'
-            });
-"""

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+print("----------------------------------------------------------")
 
 def env_maker():
     print(f"[!] No ENV file found at: {default_env_file}")

@@ -20,7 +20,6 @@ Mess_load_time = None  # we will update it dynamically for the login part
 def login(page: Page) -> bool:
     page.goto("https://web.whatsapp.com/", timeout=60_000)
     page.wait_for_load_state(state="networkidle", timeout=50_000)
-    print("Network is idle.")
 
     def scanner_login() -> None:
         canvas = sc.qr_canvas(page)

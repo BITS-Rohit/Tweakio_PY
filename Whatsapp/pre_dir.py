@@ -37,7 +37,7 @@ def designatedProfile(profile: str) -> pa.Path:
     return pwd
 
 
-def ensureProfile(profile: str) -> pa.Path:
+def ensureProfile(profile: str=SETTINGS.PROFILE) -> pa.Path:
     if profile not in _initialized_profiles:
         return designatedProfile(profile)
     return sessionDir / f"{profile}_Profile"
@@ -49,8 +49,15 @@ def getLogsFile(profile: str = SETTINGS.PROFILE) -> pa.Path:
     return ensureProfile(profile) / "Logs.txt"
 
 
-def getTraceFile(profile: str = SETTINGS.PROFILE) -> pa.Path:
-    return ensureProfile(profile) / "trace"
+def TraceStart(profile: str = SETTINGS.PROFILE) -> pa.Path:
+    # This is a directory for temporary trace data
+    path = ensureProfile(profile) / "trace"
+    path.mkdir(exist_ok=True)
+    return path
+
+def TraceStop(profile: str = SETTINGS.PROFILE) -> pa.Path:
+    # This is the final trace ZIP file path
+    return ensureProfile(profile) / "trace" / f"trace_{profile}.zip"
 
 
 def getRaceFile(profile: str = SETTINGS.PROFILE) -> pa.Path:

@@ -10,18 +10,10 @@ from playwright.sync_api import Page, Locator
 
 from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd
 
-"""
-console.log("innerWidth:", window.innerWidth);
-console.log("innerHeight:", window.innerHeight);
-console.log("outerWidth:", window.outerWidth);
-console.log("outerHeight:", window.outerHeight);
-console.log("screen.width:", screen.width);
-console.log("screen.height:", screen.height);
-
-"""
 
 
 def MessageToChat(page: Page) -> None:
+    print("Messaging to owner.")
     sbox = sc.searchBox_chatList_panel(page)
     if sbox is None:
         print("sbox is  None")
@@ -29,26 +21,24 @@ def MessageToChat(page: Page) -> None:
     else:
         print("search box seen")
     ha.move_mouse_to_locator(page, sbox)
-    print("hovered")
     sbox.click()
-    print("clicked")
     sbox.fill("")
     sbox.fill("7678686855")
-    print("filled number")
     time.sleep(random.uniform(1.0, 2.0))
 
     firstPick = page.locator("div[role='listitem'] >> div[role='button']").first
     if firstPick is None:
         print("first_pick locator failed in message to owner")
         return
-    else:
-        print("First pick is seen")
+
     firstPick.hover()
     firstPick.click()
 
     mess = sc.message_box(page)
     if mess is None:
         print("messages locator failed in message to owner")
+        return
+
     ha.move_mouse_to_locator(page, mess)
     mess.click()
     mess.fill("")
@@ -56,6 +46,9 @@ def MessageToChat(page: Page) -> None:
     mess.press("Enter")
     page.keyboard.press("Escape")
     sc.wa_icon(page).click()
+
+    print("Messaged: Logged in, Success.Tweakio: Hi ! \n Messaging Done.")
+
 
 
 def getJID_mess(message: Locator) -> str:
