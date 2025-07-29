@@ -1,9 +1,30 @@
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import Methods as helper
+from Whatsapp import Methods as helper, Methods as meth, Reply as rep
+
+pool = [
+    "showq",
+    "setgc",
+    "showgc",
+    "setchat",
+    "help",
+    "manual",
+    "showchat",
+    "add",
+    "remove",
+    "setq"
+]
 
 
 def post_process(page: Page, message: Locator, f_name: str, f_info: str):
+    text = f"Unknown command: [{f_name}]"
+    if f_name in pool:
+        meth.react(message=message, page=page)
+    else:
+        print(text)
+        rep.reply(page=page, message=message, text=f"`{text}`" + "`Plz re-try with correct command.`")
+
+    # ---- Methods Implementation --- #
     match f_name:
         case "showq":
             helper.showq(page=page, locator=message)
@@ -24,6 +45,10 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
         case "remove":
             helper.remove_admin(page=page, locator=message, num=f_info)
         case 'setq':
-            helper.setq(page=page,locator=message,quant=f_info)
+            helper.setq(page=page, locator=message, quant=f_info)
+        case 'showlist':
+            helper.showlist(page=page, locator=message)
+        case 'banlist':
+            helper.banlist(page=page, locator=message)
         case _:
-            print(f"Unknown command: {f_name}")
+            print(text)

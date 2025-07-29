@@ -1,12 +1,14 @@
 import datetime
+import pathlib as pa
 import pickle
 import random
 import re
+import shutil
 import time
 
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import selectors_config as sc, SETTINGS, HumanAction as ha, pre_dir as pwd
+from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd
 
 """
 console.log("innerWidth:", window.innerWidth);
@@ -56,54 +58,6 @@ def MessageToChat(page: Page) -> None:
     sc.wa_icon(page).click()
 
 
-def SeedCache(page: Page, ids: dict) -> None:
-    """
-    It logs the message which was not seen till now and store them with message data.
-    :param page:
-    :param ids:
-    :return: None
-    """
-    print("Seeding started \n Info -----")
-
-    chats = sc.chat_items(page)
-    print("Total Chats on this account : %s" % (sc.total_chats(page)))
-    print("Agent Reachable Chats : %s" % (chats.count()))
-    print("Allowed Top Chats [Default 5] : %s" % SETTINGS.MAX_CHAT)
-
-    for i in range(min(chats.count(), SETTINGS.MAX_CHAT)):  # Top chats.
-        chat = chats.nth(i)
-        name = sc.getChatName(chat)
-        print(f"Processing chat no. {i + 1} : {name}")
-        ha.move_mouse_to_locator(page, chat)
-        chat.click()
-        time.sleep(random.randint(1, 2))
-
-        # TODO Banlist logic coming in future updates.
-        admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", SETTINGS.NLP, "...help", SETTINGS.QUANTIFIER,
-                      "--ban--", "--unban--"]
-        messages = sc.messages(page)
-
-        print(f"Message count for this chat : {messages.count()}")
-
-        for y in range(messages.count()):
-            message = messages.nth(y)
-            m = sc.get_message_text(message).split(" ")[0].lower()
-            if m in admin_cmds:
-                if sc.get_dataID(message) not in ids:
-                    trace_message(seen_messages=ids, chat=chat, message=message)
-
-        # if sc.message_box(page) is None:
-        #     print("message Box [Message panel Input Box] is None")
-        #     break
-        # ha.move_mouse_to_locator(page, sc.message_box(page))
-        # sc.message_box(page).click()
-        # sc.message_box(page).fill("")
-
-        # TODO  unread marker
-
-    print("Seeding done.")
-
-
 def getJID_mess(message: Locator) -> str:
     """Returns the JID of the message"""
     data_id = sc.get_dataID(message)
@@ -113,13 +67,18 @@ def getJID_mess(message: Locator) -> str:
     return parts[1] if len(parts) > 1 else ""
 
 
-def getSender_mess(message: Locator) -> str:
+def getSender(message: Locator) -> str:
     """Returns the sender from the message"""
-    attr = message.locator("div[data-pre-plain-text]").get_attribute("data-pre-plain-text")
-    if not attr or "]" not in attr:
+    try:
+        attr = message.locator("div.copyable-text[data-pre-plain-text]").get_attribute("data-pre-plain-text")
+        if not attr or "]" not in attr:
+            print("[data-pre-plain-text] Content is not properly formatted.")
+            return ""
+        parts = attr.split("]",1)
+        return parts[1].strip() if len(parts) > 1 else ""
+    except Exception as e:
+        print(f"Error extracting sender: {e}")
         return ""
-    parts = attr.split("]")
-    return parts[1].strip() if len(parts) > 1 else ""
 
 
 def getDirection(message: Locator) -> str:
@@ -167,7 +126,7 @@ def trace_message(seen_messages: dict, chat: Locator, message: Locator) -> None:
         "preview_url": sc.getChat_lowImg(chat),
         "jid": getJID_mess(message),
         "message": sc.get_message_text(message),
-        "sender": getSender_mess(message),
+        "sender": getSender(message),
         "time": get_Timestamp(message),
         "systime": time.time(),
         "direction": getDirection(message),
@@ -178,7 +137,7 @@ def trace_message(seen_messages: dict, chat: Locator, message: Locator) -> None:
 def get_File_name(message: Locator, chat: Locator) -> str:
     # chat--sender--SYS_TIME
     name = sc.getChatName(chat=chat)
-    sender = getSender_mess(message=message)
+    sender = getSender(message=message)
     time = get_datetime()
     return f"{name}--{sender}--{time}"
 
@@ -191,8 +150,12 @@ def get_datetime():
 # --- ---- Seen IDs ---- ---
 def dump_ids(seen: dict) -> None:
     """Dump the seen dict to a pickle file."""
+    if not seen:
+        print("Empty Seen ids map")
+        return
     with open(pwd.get_saved_data_ids(), "wb") as f:
         pickle.dump(seen, f)
+
 
 def pick_ids() -> dict:
     """Load and return the seen dict from a pickle file."""
@@ -202,11 +165,16 @@ def pick_ids() -> dict:
     with open(path, "rb") as f:
         return pickle.load(f)
 
+
 # --- ---- Ban List ---- ---
 def dump_banlist(banlist: list) -> None:
     """Dump the banlist (list) to a pickle file."""
+    if not banlist:
+        print("Empty Banlist")
+        return
     with open(pwd.get_ban_list(), "wb") as f:
         pickle.dump(banlist, f)
+
 
 def pick_banlist() -> list:
     """Load and return the banlist from a pickle file."""
@@ -215,6 +183,24 @@ def pick_banlist() -> list:
         return []
     with open(path, "rb") as f:
         return pickle.load(f)
+
+
+def dump_admin(admin_list: list) -> None:
+    """Dump the list of admin to a pickle file"""
+    if not admin_list:
+        print("Empty Admin list")
+        return
+    with open(pwd.get_admin_list(), "wb") as f:
+        pickle.dump(admin_list, f)
+
+
+def pick_adminList() -> list:
+    path = pwd.get_admin_list()
+    if not path.exists():
+        return []
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
 
 # --- ---- Unread Handle ---- ---
 def is_unread(chat: Locator) -> int:
@@ -228,17 +214,49 @@ def is_unread(chat: Locator) -> int:
             text = number_span.inner_text().strip()
             return 1 if text.isdigit() else 0
         return 0
-    except :
+    except:
         return 0
 
 
-def mark_unread(page : Page,chat: Locator) -> None:
-    """it marks unread back"""
+def mark_unread(page: Page, chat: Locator) -> None:
+    """Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'."""
     try:
-        ha.move_mouse_to_locator(page,chat)
+        ha.move_mouse_to_locator(page, chat)
         chat.click(button="right")
-        page.get_by_role("application").locator("li span").get_by_text(re.compile("mark as unread", re.I)).click()
-    except Exception as e :
-        if page.get_by_role("application").locator("li span").get_by_text(re.compile("mark as read", re.I)).is_visible() :
-            print(f" chat is already unread - [{sc.getChatName(chat)}] ")
-        else : print(f"Error in mark unread : \n {e}")
+        time.sleep(random.uniform(1.5, 2.5))
+
+        unread_option = page.get_by_role("application").locator("li span").get_by_text(
+            re.compile("mark as unread", re.I))
+
+        if unread_option.is_visible(timeout=2000):
+            ha.move_mouse_to_locator(page, unread_option)
+            unread_option.click(timeout=2000)
+        else:
+            raise Exception("Option 'Mark as unread' not visible.")
+
+    except Exception as e:
+        try:
+            read_option = page.get_by_role("application").locator("li span").get_by_text(
+                re.compile("mark as read", re.I))
+            if read_option.is_visible(timeout=1500):
+                print(f"Chat is already unread — [{sc.getChatName(chat)}]")
+            else:
+                raise
+        except:
+            print(f"Error in mark_unread: {e}")
+
+        # Reset state by clicking outside (WA icon)
+        ha.move_mouse_to_locator(page, sc.wa_icon(page))
+        sc.wa_icon(page).click()
+
+
+def cleanFolder(folder: pa.Path) -> None:
+    if folder.exists():
+        for item in folder.iterdir():
+            try:
+                if item.is_file():
+                    item.unlink()
+                elif item.is_dir():
+                    shutil.rmtree(item)
+            except Exception as e:
+                print(f"⚠️ Could not delete {item}: {e}")

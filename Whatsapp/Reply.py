@@ -14,6 +14,7 @@ def _double_edge_click(page: Page, locator: Locator, edge: str = "right") -> Non
         edge (str): The edge to double-click near ("left" or "right").
     """
     try:
+        ha.move_mouse_to_locator(page=page,locator=locator)
         box = locator.bounding_box()
 
         if not box or box["width"] == 0 or box["height"] == 0:

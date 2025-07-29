@@ -1,19 +1,14 @@
 import base64
+import random
 import re
-from operator import truediv
+import time
 
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex
+from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
+                    HumanAction as ha , selectors_config as sc )
 
 
-def showq(page: Page, locator: Locator) -> None:
-    text = f"""
-    -----------
-    Active Quant : {SETTINGS.QUANTIFIER}
-    ----------- 
-    """
-    rep.reply(page=page, locator=locator, text=text)
 
 
 def setq(page: Page, locator: Locator, quant: str) -> None:
@@ -47,15 +42,6 @@ def setchat(page: Page, locator: Locator, max_chat_num: str) -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def showchat(page: Page, locator: Locator) -> None:
-    """
-    show current amount of max chat currently to the user
-    :param page:
-    :param locator:
-    :return:
-    """
-    text = f"Current Max chat : `{SETTINGS.MAX_CHAT}`"
-    rep.reply(page=page, locator=locator, text=text)
 
 
 def helper(page: Page, locator: Locator) -> None:
@@ -100,16 +86,6 @@ def setgc(page: Page, locator: Locator, gc_val: str) -> None:
     rep.reply(page=page, locator=locator, text=response_text)
 
 
-def showgc(page: Page, locator: Locator) -> None:
-    """
-    Show the current Global Mode to the user
-    :param page:
-    :param locator:
-    :return:
-    """
-    text = f"Current Global Mode :`{"On " if SETTINGS.GLOBAL_MODE else "Off"}`"
-    rep.reply(page=page, locator=locator, text=text)
-
 
 def manual(page: Page, locator: Locator, f_name: str) -> None:
     """
@@ -141,9 +117,55 @@ def remove_admin(page: Page, locator: Locator, num: str) -> None:
 
 def add_admin(page: Page, locator: Locator, num: str) -> None:
     """Add the admin"""
-    _.admin_list.append(num)
-    rep.reply(page=page, locator=locator, text="`Admin Added.`")
+    try:
+        int(num)
+        _.admin_list.append(num)
+        rep.reply(page=page, locator=locator, text="`Admin Added.`")
+    except Exception as e:
+        print(f"Error in num {e}")
+        rep.reply(page=page,locator=locator,text="`Failed. Retry with numbers given only.`")
 
+# --- Show commands -----
+def showlist(page: Page, locator: Locator) -> None:
+    """Prints the Admin list to the user"""
+    text = f"`Here is Admin List :` \n -- `{_.admin_list}` --"
+    rep.reply(page=page, locator=locator, text=text)
+
+
+def banlist(page: Page, locator: Locator) -> None:
+    text = f"`Here is Ban List :` \n -- `{_.ban_list}` --"
+    rep.reply(page=page, locator=locator, text=text)
+
+def showgc(page: Page, locator: Locator) -> None:
+    """
+    Show the current Global Mode to the user
+    :param page:
+    :param locator:
+    :return:
+    """
+    text = f"Current Global Mode :`{"On " if SETTINGS.GLOBAL_MODE else "Off"}`"
+    rep.reply(page=page, locator=locator, text=text)
+
+def showq(page: Page, locator: Locator) -> None:
+    text = f"""
+    -----------
+    Active Quant : {SETTINGS.QUANTIFIER}
+    ----------- 
+    """
+    rep.reply(page=page, locator=locator, text=text)
+
+def showchat(page: Page, locator: Locator) -> None:
+    """
+    show current amount of max chat currently to the user
+    :param page:
+    :param locator:
+    :return:
+    """
+    text = f"Current Max chat : `{SETTINGS.MAX_CHAT}`"
+    rep.reply(page=page, locator=locator, text=text)
+
+
+# ---- Media Content--------------
 
 def save_video(page: Page, chat: Locator, message: Locator, filename: str = None) -> None:
     """
@@ -160,7 +182,7 @@ def save_video(page: Page, chat: Locator, message: Locator, filename: str = None
     def get_VidBlob() -> str:
         playmedia = message.locator("span[data-icon='media-play']")
 
-        if not playmedia.is_visible() or playmedia.count()==0:
+        if not playmedia.is_visible() or playmedia.count() == 0:
             print("Can't find play-media button.")
             return ""
 
@@ -169,15 +191,15 @@ def save_video(page: Page, chat: Locator, message: Locator, filename: str = None
 
         try:
             page.wait_for_selector("video[src]", timeout=5000)
-        except Exception as e :
+        except Exception as e:
             print(f"Video tag did not appear in time. {e}")
             return ""
         return page.locator("video[src]").get_attribute("src") or ""
 
-    blob_url =get_VidBlob()
-    if not blob_url :
+    blob_url = get_VidBlob()
+    if not blob_url:
         print("Error getting blob_url $$$$$$$$$$$$$$$$")
-        rep.reply(page=page,locator=message,text="Cant save video , Internal Error occurred")
+        rep.reply(page=page, locator=message, text="Cant save video , Internal Error occurred")
         return
 
     base64_data = page.evaluate(f"""
@@ -200,20 +222,37 @@ def save_video(page: Page, chat: Locator, message: Locator, filename: str = None
     print(f"✅ Video saved as {filename}")
     rep.reply(page=page, locator=message, text=f"✅ Video saved as {filename}")
 
-def react(message : Locator , page : Page)->None:
-    message.hover()
-    emoji =message.get_by_role("button",name=re.compile("react",re.I))
-    if not emoji :
-        print("Null emoji ")
-        return
-    try:
-        emoji.wait_for(state="visible",timeout=3_000)
+
+# ------------ Message Prettifiers----------------
+
+def react(message: Locator, page: Page) -> None:
+    try :
+        message.hover()
+        emoji = message.get_by_role("button", name=re.compile("react", re.I))
+        if not emoji:
+            print("Null emoji ")
+            return
+        try:
+            emoji.wait_for(state="visible", timeout=3_000)
+        except Exception as e:
+            print(f"Error , cant find the emoji button \n {e}")
+            return
+        ha.move_mouse_to_locator(page=page,locator=emoji)
+        emoji.click()
+        time.sleep(random.uniform(1.0,2.0))
+        page.get_by_role("dialog").get_by_role("button").nth(0).click()  # click the first emoji
+
+        if sc.isReacted(message) : print(f"Reacted to {sc.get_message_text(message)}")
+        else : print("Reaction failed")
     except Exception as e :
-        print(f"Error , cant find the emoji button \n {e}")
-        return
-    emoji.click()
+        print(f"Error is react : {e}")
 
-    page.get_by_role("dialog").get_by_role("button").nth(0).click() # click the first emoji
 
+
+# -------- -------- -------- -------- -------- -------- -------- -------- -------- --------
 def nlp(page: Page, locator: Locator, f_info: str) -> None:
+    """ natural language-driven assessment command"""
+
+    # Still Under development
+    rep.reply(page=page,locator=locator,text=f_info)
     pass

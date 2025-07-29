@@ -6,9 +6,7 @@ Conventions:
 - All other elements returned are of the type `Locator`.
 - Utility functions are written to extract attributes or recognize content like images, videos, or quoted messages.
 """
-import random
 import re
-import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -32,7 +30,7 @@ def searchBox_chatList_panel(page: 'Page') -> 'Locator':
 
 def message_box(page: 'Page') -> 'Locator':
     """Message Input box on the message panel"""
-    return page.get_by_role("textbox", name=re.compile("type.*message", re.I)).first
+    return page.get_by_role("textbox", name=re.compile("type a message", re.I))
 
 
 def wa_icon(page: 'Page') -> 'Locator':
@@ -88,11 +86,11 @@ def getChatName(chat: 'Locator') -> str:
 def is_community(chat: 'Locator') -> str:
     """
     If this chat item has the 'default-community-refreshed' icon,
-    return the community name (the span[title] without data-icon).
+    return the community name (the span[title] without a data-icon).
     """
     icon = chat.locator("span[data-icon='default-community-refreshed']")
     if icon.is_visible():
-        # pick the first title‐span that does NOT have data-icon
+        # pick the first title‐span that does NOT have a data-icon
         name_span = chat.locator("span[title]:not([data-icon])").first
         return name_span.get_attribute("title") or ""
     return ""
@@ -166,7 +164,7 @@ def is_message_out(message: 'Locator') -> bool:
 
 def get_dataID(message: 'Locator') -> str:
     """Returns the unique data-id attribute of a message."""
-    return message.get_attribute("data-id")
+    return message.get_attribute("data-id") or ""
 
 # -------------------- Message Type Checkers -------------------- #
 
