@@ -65,7 +65,7 @@ def login(page: Page) -> bool:
                     input_box.type(SETTINGS.BOT_NUMBER, delay=random.randint(500, 1000))
                     page.keyboard.press("Enter")
 
-                    time.sleep(random.uniform(1.0,2.0))
+                    time.sleep(random.uniform(1.0, 2.0))
                     code = page.locator("div[aria-details][data-link-code]").get_attribute("data-link-code")
                     print(f"Enter code to confirm login : {code} & Waited Time for login is  60 sec")
 
@@ -75,12 +75,13 @@ def login(page: Page) -> bool:
                         if sc.chat_list(page).is_visible():
                             check = True
                             break
-                        else :
+                        else:
                             print(f"Waiting ... Secs : {i}")
                             time.sleep(1)
 
-                    if check: print("Chats loaded success.")
-                    else :
+                    if check:
+                        print("Chats loaded success.")
+                    else:
                         print("Failed login , out of Time , Re-try")
                         return False
 
@@ -99,7 +100,7 @@ def login(page: Page) -> bool:
     scanner_login()
 
     # Todo , we will reduce it as this only comes at the start like 1-2 times ,
-    # after 5 successful logins we can remove this pop-up check then reducing 5 sec more in Boot Time
+    #  after 5 successful logins we can remove this pop-up check then reducing 5 sec more in Boot Time
     time.sleep(5)  # pop up rendering time
     if sc.startup_popup(page).is_visible():
         sc.startup_popup(page).hover()

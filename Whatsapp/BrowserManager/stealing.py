@@ -11,7 +11,7 @@ def stealth(page: Page) -> None:
     s.apply_stealth_sync(page)
     page.add_init_script(_custom_js_spoof_payload())
     page.add_init_script(Mouse_UI)
-    print("[[Stealth and spoof scripts injected]]")
+    print("[[Stealth scripts and Mouse UI injected]]")
     print("----------------------------------------------------------")
 
 
@@ -168,9 +168,9 @@ headers = {
     # "Sec-Ch-Ua-Platform": "Windows", #Windows, macOS, Android
     # "Viewport-Width": "1920", # Optional, but can help match screen
 
-    # "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    # "Accept": "text/html,application/xhtml+xml, application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
     # "Accept-Encoding": "gzip, deflate, br",
-    # "Accept-Language": "en-US,en;q=0.9",
+    # "Accept-Language": "en-US, en;q=0.9",
     # "Cache-Control": "no-cache",
     # "Upgrade-Insecure-Requests": "1",
     # "DNT": "1",  # Do Not Track enabled

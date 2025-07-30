@@ -1,13 +1,9 @@
-import time
-import random
-import pyperclip
-
-from playwright.sync_api import Page,Locator
-
-# Persistent mouse position
-import random
-import time
 import math
+import random
+import time
+
+import pyperclip
+from playwright.sync_api import Page, Locator
 
 current_mouse_position = {"x": 0, "y": 0}
 
@@ -65,42 +61,25 @@ def move_mouse_to_locator(page, locator):
     move_mouse_smooth(page, target_point["x"], target_point["y"])
 
 
-
 def human_send(page: Page, locator: Locator, text: str):
     locator.click()
-    time.sleep(0.1)  # small pre-type delay
+    time.sleep(0.1)
 
     try:
-        tag = locator.evaluate("el => el.tagName").lower()
-        if tag not in ['input', 'textarea']:
-            raise ValueError(f"Element is not input/textarea/select: <{tag}>")
-
-        if len(text) <= 20:
-            for char in text:
-                delay = random.uniform(0.06, 0.15)
-                page.keyboard.type(char, delay=delay)
-                if random.random() < 0.02:
-                    page.keyboard.press("Backspace")
-                    time.sleep(delay)
-
-        elif len(text) <= 50:
-            chunk_size = max(5, len(text) // 4)
-            chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
-            for chunk in chunks:
-                current_value = locator.input_value()
-                locator.fill(current_value + chunk)
-                time.sleep(random.uniform(0.05, 0.2))
-
+        if len(text) <= 50:
+            page.keyboard.type(text, delay=random.uniform(0.05, 0.15))
         else:
             pyperclip.copy(text)
             page.keyboard.press("Control+V")
             time.sleep(0.15)
+
         page.keyboard.press("Enter")
+
     except Exception as e:
+        print(f"[Fallback Fill] Failed to send: {e}")
         try:
             locator.fill(text)
-        except Exception as inner:
-            print(f"[Fallback Fill Fail] {inner}")
-        print(f"[Fallback Fill] Error in human_send: {e}")
-        time.sleep(0.2)
-        page.keyboard.press("Enter")
+            page.keyboard.press("Enter")
+        except:
+            pass
+

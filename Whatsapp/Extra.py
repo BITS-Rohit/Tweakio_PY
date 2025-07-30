@@ -68,7 +68,7 @@ def getSender(message: Locator) -> str:
             print("[data-pre-plain-text] Content is not properly formatted.")
             return ""
         parts = attr.split("]",1)
-        return parts[1].strip() if len(parts) > 1 else ""
+        return parts[1].strip()[ : -1] if len(parts) > 1 else ""
     except Exception as e:
         print(f"Error extracting sender: {e}")
         return ""
@@ -218,10 +218,10 @@ def mark_unread(page: Page, chat: Locator) -> None:
         chat.click(button="right")
         time.sleep(random.uniform(1.5, 2.5))
 
-        unread_option = page.get_by_role("application").locator("li span").get_by_text(
+        unread_option = page.get_by_role("application").get_by_role("button").get_by_text(
             re.compile("mark as unread", re.I))
 
-        if unread_option.is_visible(timeout=2000):
+        if unread_option.wait_for(timeout=2000,state="visible"):
             ha.move_mouse_to_locator(page, unread_option)
             unread_option.click(timeout=2000)
         else:
@@ -231,7 +231,7 @@ def mark_unread(page: Page, chat: Locator) -> None:
         try:
             read_option = page.get_by_role("application").locator("li span").get_by_text(
                 re.compile("mark as read", re.I))
-            if read_option.is_visible(timeout=1500):
+            if read_option.is_visible():
                 print(f"Chat is already unread — [{sc.getChatName(chat)}]")
             else:
                 raise

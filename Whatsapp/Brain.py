@@ -167,6 +167,7 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
             return
 
         # --- Command Execution ---
+        text = text.lower()
         if auth and t in user_cmds:
             _process_cmd(message=message, text=text)
 
