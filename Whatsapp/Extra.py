@@ -11,7 +11,6 @@ from playwright.sync_api import Page, Locator
 from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd
 
 
-
 def MessageToChat(page: Page) -> None:
     print("Messaging to owner.")
     sbox = sc.searchBox_chatList_panel(page)
@@ -50,7 +49,6 @@ def MessageToChat(page: Page) -> None:
     print("Messaged: Logged in, Success.Tweakio: Hi ! \n Messaging Done.")
 
 
-
 def getJID_mess(message: Locator) -> str:
     """Returns the JID of the message"""
     data_id = sc.get_dataID(message)
@@ -60,18 +58,36 @@ def getJID_mess(message: Locator) -> str:
     return parts[1] if len(parts) > 1 else ""
 
 
-def getSender(message: Locator) -> str:
-    """Returns the sender from the message"""
-    try:
-        attr = message.locator("div.copyable-text[data-pre-plain-text]").get_attribute("data-pre-plain-text")
-        if not attr or "]" not in attr:
-            print("[data-pre-plain-text] Content is not properly formatted.")
+def getSenderID(message: Locator) -> str:
+    """
+    Returns the name if it does not have a sender else returns the number of senders
+    """
+    raw = sc.get_dataID(message)
+    def getfromlid()->str:
+        try:
+            attr = message.locator("div.copyable-text[data-pre-plain-text]").get_attribute("data-pre-plain-text")
+            if not attr or "]" not in attr:
+                print("[data-pre-plain-text] Content is not properly formatted.")
+                return ""
+            parts = attr.split("]", 1)
+            return parts[1].strip()[: -1] if len(parts) > 1 else ""
+        except Exception as e:
+            print(f"Error extracting sender: {e}")
             return ""
-        parts = attr.split("]",1)
-        return parts[1].strip()[ : -1] if len(parts) > 1 else ""
-    except Exception as e:
-        print(f"Error extracting sender: {e}")
-        return ""
+    if "@lid" in raw :
+        return getfromlid()
+    elif "@c.us" in raw and "@g.us" in raw :
+        return raw.split("_",3)[3].replace("@c.us","")
+    elif "@c.us" in raw:
+        return raw.split("_",2)[1].replace("@c.us","")
+    else :return ""
+
+def getGroudID(message : Locator) -> str:
+    raw = sc.get_dataID(message)
+    if "@g.us" in raw:
+        return raw.split("_",2)[1]
+    else :return ""
+
 
 
 def getDirection(message: Locator) -> str:
@@ -109,28 +125,30 @@ def get_Timestamp(message: Locator) -> str:
 
 
 def trace_message(seen_messages: dict, chat: Locator, message: Locator) -> None:
-    data_id = sc.get_dataID(message)
-    if data_id in seen_messages:
-        return
+    try :
+        data_id = sc.get_dataID(message)
+        if data_id in seen_messages:
+            return
 
-    seen_messages[data_id] = {
-        "chat": sc.getChatName(chat),
-        "community": sc.is_community(chat),
-        "preview_url": sc.getChat_lowImg(chat),
-        "jid": getJID_mess(message),
-        "message": sc.get_message_text(message),
-        "sender": getSender(message),
-        "time": get_Timestamp(message),
-        "systime": time.time(),
-        "direction": getDirection(message),
-        "type": get_mess_type(message)
-    }
+        seen_messages[data_id] = {
+            "chat": sc.getChatName(chat),
+            "community": sc.is_community(chat),
+            "preview_url": sc.getChat_lowImg(chat),
+            "jid": getJID_mess(message),
+            "message": sc.get_message_text(message),
+            "sender": getSenderID(message),
+            "time": get_Timestamp(message),
+            "systime": time.time(),
+            "direction": getDirection(message),
+            "type": get_mess_type(message)
+        }
+    except Exception as e : print(f"Error in Trace message : {e}")
 
 
 def get_File_name(message: Locator, chat: Locator) -> str:
     # chat--sender--SYS_TIME
     name = sc.getChatName(chat=chat)
-    sender = getSender(message=message)
+    sender = getSenderID(message=message)
     time = get_datetime()
     return f"{name}--{sender}--{time}"
 
@@ -202,7 +220,7 @@ def is_unread(chat: Locator) -> int:
     try:
         unread_badge = chat.locator("[aria-label*='unread']")
         if unread_badge.is_visible():
-            # Look for a number inside the badge
+            # Look for a number
             number_span = unread_badge.locator("span").first
             text = number_span.inner_text().strip()
             return 1 if text.isdigit() else 0
@@ -218,14 +236,14 @@ def mark_unread(page: Page, chat: Locator) -> None:
         chat.click(button="right")
         time.sleep(random.uniform(1.5, 2.5))
 
-        unread_option = page.get_by_role("application").get_by_role("button").get_by_text(
+        unread_option = page.get_by_role("application").locator("li span").get_by_text(
             re.compile("mark as unread", re.I))
 
-        if unread_option.wait_for(timeout=2000,state="visible"):
+        if unread_option.is_visible():
             ha.move_mouse_to_locator(page, unread_option)
             unread_option.click(timeout=2000)
         else:
-            raise Exception("Option 'Mark as unread' not visible.")
+            raise Exception("Option 'Mark as unread' not visible or Click error")
 
     except Exception as e:
         try:

@@ -70,8 +70,9 @@ def chat_items(page: 'Page') -> 'Locator':
 
 def getChat_lowImg(chat: 'Locator') -> str:
     """Extracts the low-quality image (thumbnail) from a chat preview item."""
+    if chat.locator("span[data-icon='default-group-refreshed']").is_visible() : return "Default group icon"
     if chat.locator("img").is_visible():
-        return chat.locator("img").get_attribute("src")
+        return chat.locator("img").first.get_attribute("src")
     return ""
 
 

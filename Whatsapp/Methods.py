@@ -6,9 +6,7 @@ import time
 from playwright.sync_api import Page, Locator
 
 from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
-                    HumanAction as ha , selectors_config as sc )
-
-
+                      HumanAction as ha, selectors_config as sc)
 
 
 def setq(page: Page, locator: Locator, quant: str) -> None:
@@ -40,8 +38,6 @@ def setchat(page: Page, locator: Locator, max_chat_num: str) -> None:
         print(f"{text} : \n {e}")
         text += " \n Try  to give correct value number"
     rep.reply(page=page, locator=locator, text=text)
-
-
 
 
 def helper(page: Page, locator: Locator) -> None:
@@ -86,7 +82,6 @@ def setgc(page: Page, locator: Locator, gc_val: str) -> None:
     rep.reply(page=page, locator=locator, text=response_text)
 
 
-
 def manual(page: Page, locator: Locator, f_name: str) -> None:
     """
     return the information about bot commands to the user
@@ -123,7 +118,8 @@ def add_admin(page: Page, locator: Locator, num: str) -> None:
         rep.reply(page=page, locator=locator, text="`Admin Added.`")
     except Exception as e:
         print(f"Error in num {e}")
-        rep.reply(page=page,locator=locator,text="`Failed. Retry with numbers given only.`")
+        rep.reply(page=page, locator=locator, text="`Failed. Retry with numbers given only.`")
+
 
 # --- Show commands -----
 def showlist(page: Page, locator: Locator) -> None:
@@ -136,6 +132,7 @@ def banlist(page: Page, locator: Locator) -> None:
     text = f"`Here is Ban List :` \n -- `{_.ban_list}` --"
     rep.reply(page=page, locator=locator, text=text)
 
+
 def showgc(page: Page, locator: Locator) -> None:
     """
     Show the current Global Mode to the user
@@ -146,6 +143,7 @@ def showgc(page: Page, locator: Locator) -> None:
     text = f"Current Global Mode :`{"On " if SETTINGS.GLOBAL_MODE else "Off"}`"
     rep.reply(page=page, locator=locator, text=text)
 
+
 def showq(page: Page, locator: Locator) -> None:
     text = f"""
     -----------
@@ -153,6 +151,7 @@ def showq(page: Page, locator: Locator) -> None:
     ----------- 
     """
     rep.reply(page=page, locator=locator, text=text)
+
 
 def showchat(page: Page, locator: Locator) -> None:
     """
@@ -225,27 +224,53 @@ def save_video(page: Page, chat: Locator, message: Locator, filename: str = None
 
 # ------------ Message Prettifiers----------------
 
-def react(message: Locator, page: Page) -> None:
-    try :
+def react(message: Locator, page: Page, tries: int = 0) -> None:
+    try:
         message.hover()
-        emoji = message.get_by_role("button", name=re.compile("react", re.I))
-        if not emoji:
-            print("Null emoji ")
-            return
         try:
-            emoji.wait_for(state="visible", timeout=3_000)
-        except Exception as e:
-            print(f"Error , cant find the emoji button \n {e}")
-            return
-        ha.move_mouse_to_locator(page=page,locator=emoji)
-        emoji.click()
-        time.sleep(random.uniform(1.0,2.0))
-        page.get_by_role("dialog").get_by_role("button").nth(0).click()  # click the first emoji
+            message.scroll_into_view_if_needed(timeout=2000)
+        except:
+            pass  # In case hover doesn't bring it into view
 
-        if sc.isReacted(message) : print(f"Reacted to {sc.get_message_text(message)}")
-        else : print("Reaction failed")
-    except Exception as e :
-        print(f"Error is react : {e}")
+        emoji_btn = message.get_by_role("button", name=re.compile("react", re.I))
+
+        try:
+            emoji_btn.wait_for(state="visible", timeout=2_000)
+        except Exception as e:
+            if tries < 2:
+                print("Retrying... React button not visible yet.")
+                return react(message, page, tries + 1)
+            else:
+                print("Max tries reached - couldn't find emoji button")
+                print(e)
+                return
+
+        ha.move_mouse_to_locator(page=page, locator=emoji_btn)
+        emoji_btn.click()
+
+        try:
+            dialog = page.get_by_role("dialog")
+            dialog.wait_for(timeout=2_000)
+            first_emoji = dialog.get_by_role("button").first
+            first_emoji.wait_for(state="visible", timeout=2000)
+            first_emoji.click()
+        except Exception as e:
+            print(f"Emoji dialog or button click failed: {e}")
+            return
+
+        time.sleep(random.uniform(1.0, 2.0))
+
+        if sc.isReacted(message):
+            print(f"Reacted to {sc.get_message_text(message)}")
+        else:
+            print("Reaction failed (possibly clicked but not registered)")
+
+    except Exception as e:
+        if tries < 2:
+            print("Retrying due to unexpected error...")
+            react(message=message, page=page, tries=tries + 1)
+        else:
+            print(f"Final failure in react(): {e}")
 
 
 
@@ -254,5 +279,5 @@ def nlp(page: Page, locator: Locator, f_info: str) -> None:
     """ natural language-driven assessment command"""
 
     # Still Under development
-    rep.reply(page=page,locator=locator,text=f_info)
+    rep.reply(page=page, locator=locator, text=f_info)
     pass

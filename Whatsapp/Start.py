@@ -18,23 +18,24 @@ browser = CusBrowser.getInstance()  # Single Instance
 
 def shutdown():
     global browser
-    print("🌙 Shutdown initiated… 🌙️")
-    print("📦  Saving seen IDs and ban list…")
+    print("🌙️ Shutdown initiated…")
+    print(" 📦  Saving seen IDs and ban list… 📦  ")
 
     ex.dump_ids(_.seen_ids)
     ex.dump_banlist(_.ban_list)
     ex.dump_admin(_.admin_list)
 
     try:
-        if browser and hasattr(browser, "context"):
+        if browser and hasattr(browser, "context") and browser.context:
             try:
-                trace_path = pre_dir.TraceStop()
-                trace_path.parent.mkdir(parents=True, exist_ok=True)
-                browser.context.tracing.stop(path=str(trace_path))
-                print(f"🗂️ Trace saved to {trace_path}")
+                if browser.context.tracing:
+                    trace_path = pre_dir.TraceStop()
+                    trace_path.parent.mkdir(parents=True, exist_ok=True)
+                    browser.context.tracing.stop(path=str(trace_path))
+                    print(f"🗂️ Trace saved to {trace_path}")
             except Exception as e:
-                print(f"⚠️  could not stop tracing (ignored): {e}")
-
+                print("try Check for the trace.")
+                # print(f"⚠️ Could not stop tracing (ignored): {e}")
             # ✅ Then try to close the browser
             try:
                 browser.close()
@@ -45,8 +46,6 @@ def shutdown():
         print(f"⚠️ Unexpected shutdown error: {outer}")
 
     print("✅  Clean exit.")
-
-
 
 def handle_signal(*_):
     shutdown()

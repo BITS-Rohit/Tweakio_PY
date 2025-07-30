@@ -111,7 +111,6 @@ class CusBrowser:
         CusBrowser._instance = None
         print("🧹 Browser closed and resources cleaned.")
 
-
 # Usage
 def getInstance():
     return CusBrowser()

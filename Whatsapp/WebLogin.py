@@ -7,15 +7,11 @@ from playwright.sync_api import Page
 from Whatsapp import selectors_config as sc, SETTINGS
 
 # -----------------------------------------------------------------------------------------------------------------------
-# preferred_login_method = SETTINGS.LOGIN_METHOD
-preferred_login_method = 1
+preferred_login_method = SETTINGS.LOGIN_METHOD
 # browser = CusBrowser.getInstance()
 debug = SETTINGS.DEBUG
 Mess_load_time = None  # we will update it dynamically for the login part
-
-
 # -----------------------------------------------------------------------------------------------------------------------
-
 
 def login(page: Page) -> bool:
     page.goto("https://web.whatsapp.com/", timeout=60_000)
@@ -87,7 +83,7 @@ def login(page: Page) -> bool:
 
             else:
                 # Already logged in, wait for the chat list
-                print("Already Login | waiting for the chats to load.")
+                print("Already Login | Chat Loading ...")
                 sc.chat_list(page).wait_for(timeout=SETTINGS.LOGIN_WAIT_TIME, state="visible")
                 print("Chats loaded success.")
             # print("Full Boot Success.")

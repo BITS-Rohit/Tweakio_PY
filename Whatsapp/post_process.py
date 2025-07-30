@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import Methods as helper, Methods as meth, Reply as rep
+from Whatsapp import Methods as helper, Reply as rep
 
 pool = [
     "showq",
@@ -19,7 +19,7 @@ pool = [
 def post_process(page: Page, message: Locator, f_name: str, f_info: str):
     text = f"Unknown command: [{f_name}]"
     if f_name in pool:
-        meth.react(message=message, page=page)
+        helper.react(message=message, page=page)
     else:
         print(text)
         rep.reply(page=page, message=message, text=f"`{text}`" + "`Plz re-try with correct command.`")

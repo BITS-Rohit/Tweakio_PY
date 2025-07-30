@@ -80,6 +80,6 @@ REFRESH_TIME = int(os.getenv("REFRESH_TIME", "5"))
 SLOW_MO = int(os.getenv("SLOW_MO", f"{random.randint(200, 300)}"))
 BROWSER_INIT_TIMEOUT = int(os.getenv("10_000", "0"))
 LOGIN_WAIT_TIME = int(os.getenv("LOGIN_WAIT_TIME", "180_000"))
-LOGIN_METHOD = int(os.getenv("LOGIN_METHOD", "2"))  # 1 for scan, 2 for code
+LOGIN_METHOD = int(os.getenv("LOGIN_METHOD", "1"))  # 1 for scan, 2 for code
 GLOBAL_MODE = os.getenv("GLOBAL_MODE", "False")
 RESTART_TIME= int(os.getenv("RESTART_TIME","2"))
