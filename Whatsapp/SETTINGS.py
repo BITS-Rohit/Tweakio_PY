@@ -1,53 +1,21 @@
-import os
 import random
-from pathlib import Path
-
 from dotenv import load_dotenv
+from pathlib import Path
+import os
+
 
 print("----------------------------------------------------------")
-print("[ENV CHECK] PROFILE =", os.getenv("PROFILE"))
-
-def env_maker():
-    print(f"[!] No ENV file found at: {default_env_file}")
-    print("🧾 Please enter environment variables manually:")
-
-    # Ask user for runtime values
-    runtime_profile = "dev"
-    print(f" using {runtime_profile}.env")
-
-    # Create an ENV folder if it doesn't exist
-    env_dir = project_root / "ENV"
-    env_dir.mkdir(exist_ok=True)
-
-    # Save a new .env file
-    runtime_env_file = env_dir / f"{runtime_profile}.env"
-    with open(runtime_env_file, "w") as f:
-        f.write(f"PROFILE={runtime_profile}\n")
-
-    print(f"[+] Created runtime ENV file at: {runtime_env_file}")
-
-    # Load the new .env file
-    load_dotenv(runtime_env_file, override=False)
-
-
-
-
-#  Locate the default ENV path
-project_root = Path(__file__).resolve().parents[1]
-runtime_profile = os.getenv("PROFILE", "dev")
-default_env_file = project_root / "ENV" / f"{runtime_profile}.env"
-
-
-# Check if default .env exists
-if default_env_file.exists():
-    print(f"[✔] ENV file found at: {default_env_file}")
-    load_dotenv(default_env_file, override=False)
+env_path = Path(__file__).resolve().parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path)
+    print(f"[ENV] Loaded .env from: {env_path}")
 else:
-    env_maker()
+    print("[ENV] Running in CI or production — skipping .env")
+
 
 #  PROFILE value
-PROFILE =  default_env_file.stem or "dev"
-print("📌 PROFILE =", PROFILE)
+PROFILE =  os.getenv("PROFILE","dev")
+print("[ENV CHECK] PROFILE =", os.getenv("PROFILE"))
 
 #  Bot Info
 BOT_NAME = os.getenv("BOT_NAME", "Tweakio")
