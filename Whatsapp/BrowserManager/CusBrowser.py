@@ -8,12 +8,12 @@ Monkey Patching we will be doing
 import threading
 
 from playwright.sync_api import sync_playwright, Page
-import ip
 import Whatsapp.BrowserManager.stealing as steal
 from Whatsapp import SETTINGS, pre_dir
 
 # -----------------------------------------------------------------------------------------------------------------------
 traces_dir = pre_dir.TraceStart()
+
 # -----------------------------------------------------------------------------------------------------------------------
 
 class CusBrowser:
@@ -22,6 +22,8 @@ class CusBrowser:
     """
     _instance = None
     _lock = threading.Lock()
+    user_data_dir = pre_dir.getSavedLoginDir(SETTINGS.PROFILE)
+    storage_state = f"{user_data_dir}/storageState.json"
 
     def __init__(self):
         self.browser = None
@@ -35,13 +37,11 @@ class CusBrowser:
         return cls._instance
 
     def _init_browser(self):
-        ip.main() # IP configs
+        # ip.main() # IP configs
         print("----------------------------------------------------------")
         print("🚀 Launching persistent stealth Chromium instance...")
 
         self.playwright = sync_playwright().start()
-
-        user_data_dir = pre_dir.getSavedLoginDir(SETTINGS.PROFILE)
         self.context = self.playwright.chromium.launch_persistent_context(
             slow_mo=0,
             locale="en-US",
@@ -55,7 +55,7 @@ class CusBrowser:
             service_workers="allow",  # block
             has_touch=False,
             ignore_https_errors=True,
-            user_data_dir=user_data_dir,
+            user_data_dir=self.user_data_dir,
             devtools=False,
             device_scale_factor=2.0,
             headless=False,
@@ -114,3 +114,5 @@ class CusBrowser:
 # Usage
 def getInstance():
     return CusBrowser()
+
+# PYTHONUNBUFFERED=1;PROFILE=tweakio;BOT_NUMBER=32 782 69577;BOT_NUM_COUNTRY=pakistan;ADMIN_NUMBER=7678686855

@@ -4,96 +4,115 @@ import time
 
 from playwright.sync_api import Page
 
-from Whatsapp import selectors_config as sc, SETTINGS
+from Whatsapp import selectors_config as sc, SETTINGS, HumanAction as ha
+
 
 # -----------------------------------------------------------------------------------------------------------------------
 preferred_login_method = SETTINGS.LOGIN_METHOD
-# browser = CusBrowser.getInstance()
 debug = SETTINGS.DEBUG
 Mess_load_time = None  # we will update it dynamically for the login part
 # -----------------------------------------------------------------------------------------------------------------------
 
-def login(page: Page) -> bool:
+def login(page: Page,browser) -> bool:
     page.goto("https://web.whatsapp.com/", timeout=60_000)
     page.wait_for_load_state(state="networkidle", timeout=50_000)
 
-    def scanner_login() -> None:
-        canvas = sc.qr_canvas(page)
+    def scanner_login() -> bool:
         try:
-            time.sleep(2)  # Time for canvas to be visible
+            canvas = sc.qr_canvas(page)
+            time.sleep(2)
+
             if canvas.is_visible():
                 if preferred_login_method == 1:
-                    # Wait for a chat list after QR scan
+                    # Wait for QR scan to complete
                     print("Waiting for QR scan")
                     t = SETTINGS.LOGIN_WAIT_TIME / 2
-                    sc.chat_list(page).wait_for(timeout=t, state="visible")
-                    if canvas.is_visible():
-                        print(f"Did not scanned qr in Given Time [{t}]")
+                    try:
+                        sc.chat_list(page).wait_for(timeout=t, state="visible")
+                        if canvas.is_visible():
+                            print(f"Did not scan QR in given time [{t}]")
+                            return False
+                    except Exception:
+                        print("Chat list not loaded after QR wait.")
                         return False
+
                 else:
-                    # Click the "Login with phone number" button
+                    # Phone number login flow
                     print("Initiating automated code login")
-                    button = page.get_by_role("button", name=re.compile("log.*in.*phone number", re.I))
-                    button.hover(timeout=random.randint(1000, 2000))
-                    button.click()
+                    try:
+                        login_btn = page.get_by_role("button", name=re.compile("log.*in.*phone number", re.I))
+                        login_btn.hover(timeout=2000)
+                        login_btn.click()
+                    except Exception:
+                        print("Login with phone number button not found.")
+                        return False
 
-                    # Now we need to define the further steps for the code-based login
-                    page.wait_for_load_state(state="networkidle")
-                    country = page.locator("xpath=.//button//span[contains(@data-icon='chevron')]")
-                    country.hover()
-                    country.click(click_count=random.randint(1, 2))
+                    page.wait_for_load_state("networkidle")
 
-                    wa_popover = page.locator(
-                        "xpath=.//div[contains(@id=''wa.*popovers)]//span[contains(@data-icon='search']")
-                    wa_popover.hover()
-                    wa_popover.click()
-                    wa_popover.type(SETTINGS.BOT_NUM_COUNTRY, delay=random.randint(300, 600))
+                    try:
+                        country = page.locator("button:has(span[data-icon='chevron'])")
+                        country.wait_for(timeout=7000, state="visible")
+                        country.hover()
+                        country.click()
+                    except Exception:
+                        print("Country selector not clickable.")
+                        return False
 
-                    time.sleep(random.uniform(0.5, 1.5))
-                    wa_popover.press("ArrowDown")
-                    time.sleep(random.uniform(0.6, 1.2))
-                    wa_popover.press("ArrowDown")
-                    time.sleep(random.uniform(0.3, 0.7))
-                    wa_popover.press("Enter")
+                    try:
+                        page.keyboard.type(SETTINGS.BOT_NUM_COUNTRY, delay=random.randint(100, 200))
+                        time.sleep(random.uniform(0.3, 0.7))
+                        page.keyboard.press("ArrowDown")
+                        page.keyboard.press("ArrowDown")
+                        page.keyboard.press("Enter")
+                    except Exception as e :
+                        print(f"Country search failed. {e}")
+                        return False
 
-                    input_box = page.get_by_role("textbox", name=re.compile("phone number", re.I))
-                    input_box.hover()
-                    input_box.type(SETTINGS.BOT_NUMBER, delay=random.randint(500, 1000))
-                    page.keyboard.press("Enter")
+                    try:
+                        input_box = page.locator("form >> input")
+                        ha.move_mouse_to_locator(page,input_box)
+                        input_box.click()
+                        input_box.type(SETTINGS.BOT_NUMBER, delay=random.randint(100, 200))
+                        page.keyboard.press("Enter")
+                    except Exception as e :
+                        print(f"Phone number input failed.{e}")
+                        return False
 
-                    time.sleep(random.uniform(1.0, 2.0))
-                    code = page.locator("div[aria-details][data-link-code]").get_attribute("data-link-code")
-                    print(f"Enter code to confirm login : {code} & Waited Time for login is  60 sec")
+                    try:
+                        time.sleep(random.uniform(1.0, 2.0))
+                        code_elem = page.locator("div[data-link-code]")
+                        code_elem.wait_for(timeout=10000)
+                        code = code_elem.get_attribute("data-link-code")
+                        print(f"Enter code to confirm login: {code} — Waited 60 sec")
+                    except Exception as e:
+                        print(f"Login code not found. {e}")
+                        return False
 
-                    i = 1
-                    check = False
-                    while i <= 60:
-                        if sc.chat_list(page).is_visible():
-                            check = True
-                            break
-                        else:
-                            print(f"Waiting ... Secs : {i}")
-                            time.sleep(1)
-
-                    if check:
-                        print("Chats loaded success.")
-                    else:
-                        print("Failed login , out of Time , Re-try")
+                    try:
+                        sc.chat_list(page).wait_for(timeout=60000, state="visible")
+                        print("Chats loaded successfully.")
+                        browser.context.storage_state(path=browser.storage_state)  # Needed for Auto GitHub workflow
+                        return True
+                    except Exception:
+                        print("Login failed — chats not loaded in time.")
                         return False
 
             else:
-                # Already logged in, wait for the chat list
-                print("Already Login | Chat Loading ...")
+                # Already logged in
+                print("Already logged in | Chat Loading...")
                 sc.chat_list(page).wait_for(timeout=SETTINGS.LOGIN_WAIT_TIME, state="visible")
-                print("Chats loaded success.")
-            # print("Full Boot Success.")
-            return True
+                print("Chats loaded successfully.")
+                browser.context.storage_state(path=browser.storage_state) # Needed for Auto GitHub workflow
+                return True
+
         except Exception as e:
             print("Can't Login...")
-            print(f"Login error from scanner_login // login \n : {e}")
+            print(f"Login error from scanner_login // login:\n{e}")
             return False
 
-    scanner_login()
+    if not scanner_login():
+        return False
+
 
     # Todo , we will reduce it as this only comes at the start like 1-2 times ,
     #  after 5 successful logins we can remove this pop-up check then reducing 5 sec more in Boot Time

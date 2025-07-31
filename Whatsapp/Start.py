@@ -80,11 +80,11 @@ if __name__ == '__main__':
                     print("Error in Page getting in start.py")
                     break
 
-            success = wl.login(page=page)  # Login
+            success = wl.login(page=page,browser=browser)  # Login
 
             if not success:
                 print("❌  Login failed — exiting. ")
-                break
+                handle_signal()
 
             # Load modules
             _.load()

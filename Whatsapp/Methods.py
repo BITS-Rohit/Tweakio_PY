@@ -18,7 +18,7 @@ def setq(page: Page, locator: Locator, quant: str) -> None:
     :return:
     """
     SETTINGS.QUANTIFIER = quant
-    text = f"Quant Updated. Success! \n Current Now : `{SETTINGS.PROFILE}`"
+    text = f"Quant Updated. Success!  Current Now : `{SETTINGS.QUANTIFIER}`"
     rep.reply(page=page, locator=locator, text=text)
 
 

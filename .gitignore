@@ -12,7 +12,8 @@ build/
 *.env
 
 ENV/*
-!ENV/.gitkeep
+*.run.xml
+!ENV/dev.env
 
 # PyCharm project settings
 .idea/

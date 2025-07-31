@@ -14,7 +14,7 @@ def _double_edge_click(page: Page, locator: Locator, edge: str = "right") -> Non
         edge (str): The edge to double-click near ("left" or "right").
     """
     try:
-        ha.move_mouse_to_locator(page=page,locator=locator)
+        ha.move_mouse_to_locator(page=page, locator=locator)
         box = locator.bounding_box()
 
         if not box or box["width"] == 0 or box["height"] == 0:
@@ -43,19 +43,26 @@ def reply(page: Page, locator: Locator, text: str, retry: int = 0) -> None:
             message=locator) else _double_edge_click(page=page, locator=locator, edge="right")
 
         inBox = sc.message_box(page)
-        if inBox is None: return
-
-        ha.move_mouse_to_locator(page=page, locator=inBox)
+        ha.move_mouse_to_locator(page, inBox)
         inBox.click()
 
-        ha.human_send(page=page,locator=inBox,text=text)
-        inBox.press("Enter")
+        #  split on real newlines
+        lines = text.split("\n")
+        for i, line in enumerate(lines):
+            page.keyboard.type(line)
+            if i < len(lines) - 1:
+                # insert an in-draft newline
+                page.keyboard.press("Shift+Enter")
+
+        page.keyboard.press("Enter")
     except Exception as e:
-        if retry < 3 : reply(page=page, locator=locator, text=text, retry=retry + 1)
+        if retry < 3: reply(page=page, locator=locator, text=text, retry=retry + 1)
         print(f"Error in reply : \n {e}")
+
 
 def reply_media():
     pass
 
-def reply_menu() :
+
+def reply_menu():
     pass

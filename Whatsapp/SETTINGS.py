@@ -1,5 +1,6 @@
 import os
 import random
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -11,7 +12,8 @@ def env_maker():
     print("🧾 Please enter environment variables manually:")
 
     # Ask user for runtime values
-    runtime_profile = input("Enter PROFILE value (e.g., dev, prod, test): ").strip() or "dev"
+    runtime_profile = "dev"
+    print(f" using {runtime_profile}.env")
 
     # Create an ENV folder if it doesn't exist
     env_dir = project_root / "ENV"
@@ -32,12 +34,14 @@ def env_maker():
 
 #  Locate the default ENV path
 project_root = Path(__file__).resolve().parents[1]
-default_env_file = project_root / "ENV" / "dev.env"
+runtime_profile = os.getenv("PROFILE", "dev")
+default_env_file = project_root / "ENV" / f"{runtime_profile}.env"
+
 
 # Check if default .env exists
 if default_env_file.exists():
     print(f"[✔] ENV file found at: {default_env_file}")
-    load_dotenv(default_env_file, override=True)
+    load_dotenv(default_env_file, override=False)
 else:
     env_maker()
 
