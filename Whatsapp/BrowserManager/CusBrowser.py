@@ -68,7 +68,8 @@ class CusBrowser:
             traces_dir=traces_dir,
             args=[
                 "--disable-infobars",
-                "--window-size=1280,800"
+                "--window-size=1280,800",
+                '--no-sandbox'
             ],
             viewport={"width": 1280, "height":720 },
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
