@@ -6,13 +6,13 @@ on:
       - main
   workflow_dispatch:
 
+
 env:
   PYTHONUNBUFFERED: "1"
   PROFILE: ${{ secrets.PROFILE }}
   BOT_NUMBER: ${{ secrets.BOT_NUMBER }}
   ADMIN_NUMBER: ${{ secrets.ADMIN_NUMBER }}
   BOT_NUM_COUNTRY: ${{ secrets.BOT_NUM_COUNTRY }}
-
 
 jobs:
   run-whatsapp-bot:
@@ -49,18 +49,23 @@ jobs:
             libdbus-1-3 libxtst6 libxinerama1 libsecret-1-0 libevent-2.1-7 \
             libopus0 libwoff1 libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
             libhyphen0 libharfbuzz-icu0
-      - name: 📁 Show current directory structure
+
+      - name: 📁 Show directory and environment info
         run: |
-          pwd
-          ls -R
+            echo "🔹 Current directory:"
+            pwd
+            echo "🔹 File structure:"
+            ls -R
+            echo "🔹 Profile: $PROFILE"
+            echo "🔹 Bot Number: $BOT_NUMBER"
+            echo "🔹 Admin: $ADMIN_NUMBER"
+            echo "🔹 Debug Mode: $DEBUG_MODE"
 
-
-      - name: 🚀 Launch WhatsApp bot with GUI (headful)
+      - name: 🚀 Launch WhatsApp bot (headful mode)
         run: |
           export PYTHONPATH=.
           xvfb-run --auto-servernum --server-args='-screen 0 1024x768x24' \
           python Whatsapp/Start.py
-      
 
       - name: 💾 Save updated Playwright session cache
         uses: actions/cache@v3

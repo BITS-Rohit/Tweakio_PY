@@ -91,6 +91,8 @@ class CusBrowser:
             else:
                 raise Exception("Error in Tracing man")
 
+        self.context.storage_state(path=self.storage_state)
+
         self.page = self.context.pages[0] if self.context.pages else self.context.new_page()
         print("~~Chromium persistent context initialized with stealth mode~~")
 
