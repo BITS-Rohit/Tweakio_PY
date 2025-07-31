@@ -48,11 +48,18 @@ jobs:
             libdbus-1-3 libxtst6 libxinerama1 libsecret-1-0 libevent-2.1-7 \
             libopus0 libwoff1 libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
             libhyphen0 libharfbuzz-icu0
+      - name: 📁 Show current directory structure
+        run: |
+          pwd
+          ls -R
+
 
       - name: 🚀 Launch WhatsApp bot with GUI (headful)
         run: |
+          export PYTHONPATH=.
           xvfb-run --auto-servernum --server-args='-screen 0 1024x768x24' \
           python Whatsapp/Start.py
+      
 
       - name: 💾 Save updated Playwright session cache
         uses: actions/cache@v3
