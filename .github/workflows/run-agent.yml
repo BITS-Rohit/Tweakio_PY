@@ -66,6 +66,12 @@ jobs:
           export PYTHONPATH=.
           xvfb-run --auto-servernum --server-args='-screen 0 1024x768x24' \
           python Whatsapp/Start.py
+      - name: Upload screenshots
+        if: always()  # ensures it runs even if the script fails
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-debug
+          path: screenshots/
 
       - name: 💾 Save updated Playwright session cache
         uses: actions/cache@v3
