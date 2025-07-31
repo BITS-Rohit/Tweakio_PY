@@ -15,7 +15,7 @@ else:
 
 #  PROFILE value
 PROFILE =  os.getenv("PROFILE","dev")
-print("[ENV CHECK] PROFILE =", os.getenv("PROFILE"))
+print("[ENV CHECK] PROFILE =", PROFILE)
 
 #  Bot Info
 BOT_NAME = os.getenv("BOT_NAME", "Tweakio")
