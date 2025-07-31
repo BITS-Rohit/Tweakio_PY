@@ -1,11 +1,11 @@
 import os
 import random
-import time
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 print("----------------------------------------------------------")
+print("[ENV CHECK] PROFILE =", os.getenv("PROFILE"))
 
 def env_maker():
     print(f"[!] No ENV file found at: {default_env_file}")
@@ -27,7 +27,7 @@ def env_maker():
     print(f"[+] Created runtime ENV file at: {runtime_env_file}")
 
     # Load the new .env file
-    load_dotenv(runtime_env_file, override=True)
+    load_dotenv(runtime_env_file, override=False)
 
 
 
