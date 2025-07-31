@@ -140,7 +140,7 @@ def showgc(page: Page, locator: Locator) -> None:
     :param locator:
     :return:
     """
-    text = f"Current Global Mode :`{"On " if SETTINGS.GLOBAL_MODE else "Off"}`"
+    text = f"Current Global Mode :`{'On ' if SETTINGS.GLOBAL_MODE else 'Off'}`"
     rep.reply(page=page, locator=locator, text=text)
 
 
@@ -239,7 +239,6 @@ def react(message: Locator, page: Page, tries: int = 0) -> None:
             else:
                 print("Max tries reached - couldn't find emoji button")
                 print(e)
-                return
 
         ha.move_mouse_to_locator(page=page, locator=emoji_btn)
         emoji_btn.click()
@@ -252,7 +251,6 @@ def react(message: Locator, page: Page, tries: int = 0) -> None:
             first_emoji.click()
         except Exception as e:
             print(f"Emoji dialog or button click failed: {e}")
-            return
 
         time.sleep(random.uniform(1.0, 2.0))
 
