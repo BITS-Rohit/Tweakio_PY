@@ -52,7 +52,7 @@ jobs:
       - name: 🚀 Launch WhatsApp bot with GUI (headful)
         run: |
           xvfb-run --auto-servernum --server-args='-screen 0 1024x768x24' \
-          python start.py
+          python Start.py
 
       - name: 💾 Save updated Playwright session cache
         uses: actions/cache@v3
