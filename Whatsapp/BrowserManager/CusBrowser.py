@@ -61,15 +61,15 @@ class CusBrowser:
             headless=False,
             ignore_default_args=[
                 "--enable-automation",
-                "--no-sandbox",
                 "--disable-blink-features=AutomationControlled"
             ],
             timeout=SETTINGS.BROWSER_INIT_TIMEOUT,
             traces_dir=traces_dir,
             args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
                 "--disable-infobars",
                 "--window-size=1280,800",
-                '--no-sandbox'
             ],
             viewport={"width": 1280, "height":720 },
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
