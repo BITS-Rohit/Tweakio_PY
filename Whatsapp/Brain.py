@@ -1,5 +1,6 @@
 import random
 import time
+from datetime import datetime
 
 from playwright.sync_api import Locator, Page
 
@@ -52,7 +53,7 @@ def Start_Handling(p: Page) -> None:
             _range_ = int(min(total, SETTINGS.MAX_CHAT))
 
             print(f"\n---- ---- ---- Cycle {cycle} ---- ---- ----")
-            print(f"Chat count found : {total}")
+            print(f"Chat count found : {total} ")
             print(f"Max chat checking : {_range_}")
 
             cycle += 1
@@ -62,7 +63,7 @@ def Start_Handling(p: Page) -> None:
                 chat = chats.nth(i)
                 _check_messages(chat, y)
                 y += 1
-                time.sleep(random.uniform(0.5, 3.0))
+                time.sleep(random.uniform(1.0, 2.0))
 
     except Exception as e:
         print(f"Handle chats error: {e}")
@@ -73,7 +74,7 @@ def _check_messages(chat: Locator, y: int) -> None:
         name = sc.getChatName(chat)
         unread = ex.is_unread(chat)
         if unread == 0:
-            print(f"-- --  Skipping Top chat [no - {y}] with name - {name} -- --")
+            print(f"-- --  Skipping Top chat [no - {y}] with name - {name} -- -- {Time()}")
             return
 
         ha.move_mouse_to_locator(page, chat)
@@ -120,12 +121,16 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
 
         # --- Auth Checks ---
         auth , P_AUTH , sender= False,False,""
-        try:
-            auth = SETTINGS.GLOBAL_MODE or mess_out
-            sender_raw = ex.getSenderID(message)
-            sender = (sender_raw or "").replace(" ", "").replace("+", "")
-            P_AUTH = sender in _.admin_list or mess_out
-        except Exception as e : print(f"Error in auth checks : {e}")
+        def authChecks():
+            nonlocal auth,P_AUTH,sender
+            try:
+                auth = SETTINGS.GLOBAL_MODE or mess_out
+                sender_raw = ex.getSenderID(message)
+                sender = (sender_raw or "").replace(" ", "").replace("+", "")
+                P_AUTH = sender in _.admin_list or mess_out
+            except Exception as e:
+                print(f"Error in auth checks : {e}")
+        authChecks()
 
         name = sc.getChatName(chat)
         print(f"Prefix : {t}")
@@ -139,7 +144,9 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
             return
 
         # --- Ban/Unban Handling ---
+        check = False
         def Ban_Handle():
+            nonlocal check
             GID = ex.getGroudID(message)
             if P_AUTH and t in ["--ban--", "--unban--"]:
                 if not GID:
@@ -148,28 +155,36 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
 
                 if t == "--unban--":
                     if GID in _.ban_list:
+                        helper.react(page=page,message=message)
                         _.ban_list.remove(GID)
                         print(f"✅ Unbanned chat: {name}")
                         rep.reply(page=page, locator=message, text=f"✅ Unbanned chat: {name}")
+                        check = True
                     else:
                         print(f"Chat[{name}] with GID[{GID}] is not in ban list.")
                     return
 
                 elif t == "--ban--":
                     if GID not in _.ban_list:
+                        helper.react(page=page, message=message)
+                        print(f"Ban list before banning: {_.ban_list}")
                         _.ban_list.append(GID)
-                        print(f"❌ Banned chat: {name}")
-                        rep.reply(page=page, locator=message, text=f"❌ Banned chat: {name}")
+                        print(f"Ban list after banning: {_.ban_list}")
+                        print(f"`chat is banned now : [{name}]`")
+                        rep.reply(page=page, locator=message, text=f"`chat is banned now : [{name}]`")
+                        check=True
                     else:
-                        rep.reply(page=page, locator=message, text=f"`{name} is already in ban list.`")
+                        rep.reply(page=page, locator=message, text=f"`[{name}] is already in ban list.`")
                     return
 
             if GID in _.ban_list:
                 print("Banned chat. Returning.")
+                check=True
                 return
 
         try:
             Ban_Handle()
+            if check: return
         except Exception as e:
             print(f" Error in Ban Handle : {e}")
 
@@ -270,3 +285,5 @@ def _natural_cmd(message: Locator, text: str) -> None:
     except Exception as e:
         print(f"[Natural_Cmd Error] {e}")
         rep.reply(page=page, locator=message, text=f"❗ Natural command error:\n`{e}`")
+
+def Time()-> str: return datetime.now().strftime("%-I : %M:%S %p").lower()

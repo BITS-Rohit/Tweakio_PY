@@ -22,7 +22,7 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
         helper.react(message=message, page=page)
     else:
         print(text)
-        rep.reply(page=page, message=message, text=f"`{text}`" + "`Plz re-try with correct command.`")
+        rep.reply(page=page, locator=message, text=f"`{text}`" + "`Plz re-try with correct command.`")
 
     # ---- Methods Implementation --- #
     match f_name:
@@ -50,5 +50,7 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
             helper.showlist(page=page, locator=message)
         case 'banlist':
             helper.banlist(page=page, locator=message)
+        case 'saveVid' :
+            helper.save_video(page=page,message=message)
         case _:
             print(text)

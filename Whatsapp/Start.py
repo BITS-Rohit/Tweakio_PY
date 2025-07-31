@@ -33,14 +33,15 @@ def shutdown():
                     trace_path.parent.mkdir(parents=True, exist_ok=True)
                     browser.context.tracing.stop(path=str(trace_path))
                     print(f"🗂️ Trace saved to {trace_path}")
-            except Exception as e:
-                print("try Check for the trace.")
+            except Exception:
+                print("Trace Check.")
                 # print(f"⚠️ Could not stop tracing (ignored): {e}")
             # ✅ Then try to close the browser
             try:
                 browser.close()
             except Exception as e:
                 print(f"⚠️ Error closing browser (ignored): {e}")
+        else : print("Browser is already Closed , Tracing Skip.")
 
     except Exception as outer:
         print(f"⚠️ Unexpected shutdown error: {outer}")

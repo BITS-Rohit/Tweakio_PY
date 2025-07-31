@@ -145,11 +145,7 @@ def showgc(page: Page, locator: Locator) -> None:
 
 
 def showq(page: Page, locator: Locator) -> None:
-    text = f"""
-    -----------
-    Active Quant : {SETTINGS.QUANTIFIER}
-    ----------- 
-    """
+    text = f"`Active Quant : {SETTINGS.QUANTIFIER}`"
     rep.reply(page=page, locator=locator, text=text)
 
 
@@ -160,7 +156,7 @@ def showchat(page: Page, locator: Locator) -> None:
     :param locator:
     :return:
     """
-    text = f"Current Max chat : `{SETTINGS.MAX_CHAT}`"
+    text = f"`Current Max chat : {SETTINGS.MAX_CHAT}`"
     rep.reply(page=page, locator=locator, text=text)
 
 
