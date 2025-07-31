@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 
 env:
+  PYTHONUNBUFFERED: "1"
   PROFILE: ${{ secrets.PROFILE }}
   BOT_NUMBER: ${{ secrets.BOT_NUMBER }}
   ADMIN_NUMBER: ${{ secrets.ADMIN_NUMBER }}
