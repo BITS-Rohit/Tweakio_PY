@@ -1,16 +1,20 @@
 import random
 import re
 import time
+from pathlib import Path
 
 from playwright.sync_api import Page
 
-from Whatsapp import selectors_config as sc, SETTINGS, HumanAction as ha,pre_dir as pwd
+from Whatsapp import selectors_config as sc, SETTINGS, HumanAction as ha
 
 
 # -----------------------------------------------------------------------------------------------------------------------
 preferred_login_method = SETTINGS.LOGIN_METHOD
 debug = SETTINGS.DEBUG
 Mess_load_time = None  # we will update it dynamically for the login part
+ROOT_DIR = Path(__file__).resolve().parent.parent
+SCREENSHOT_DIR = ROOT_DIR / "screenshots"
+SCREENSHOT_DIR.mkdir(exist_ok=True, parents=True)
 # -----------------------------------------------------------------------------------------------------------------------
 
 def login(page: Page, browser) -> bool:
@@ -99,8 +103,6 @@ def login(page: Page, browser) -> bool:
                     return True
                 except Exception:
                     print("Chat list failed to appear. Possibly stuck on 'Use here' or another prompt.")
-                    #  take screenshot
-                    page.screenshot(path=pwd.designatedProfile() / "screenshots"/"login_debug.png")
                     return False
 
         except Exception as e:
@@ -109,6 +111,12 @@ def login(page: Page, browser) -> bool:
             return False
 
     if not scanner_login():
+        ts = int(time.time())
+        out = SCREENSHOT_DIR / f"login_debug_{ts}.png"
+        page.screenshot(path=str(out))
+        print(f"⚠️  Saved debug screenshot to {out}")
+        # print("Can't Login...")
+        # print(f"Login error from scanner_login // login:\n{e}")
         return False
 
     time.sleep(5)
