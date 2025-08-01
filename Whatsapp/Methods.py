@@ -7,6 +7,7 @@ from playwright.sync_api import Page, Locator
 
 from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
                       HumanAction as ha, selectors_config as sc)
+from Whatsapp.selectors_config import isReacted
 
 
 def setq(page: Page, locator: Locator, quant: str) -> None:
@@ -222,13 +223,17 @@ def save_video(page: Page, chat: Locator, message: Locator, filename: str = None
 
 def react(message: Locator, page: Page, tries: int = 0) -> None:
     try:
-        message.hover()
+        if isReacted(message):
+            print("Already Reacted")
+            return None
+        message.wait_for(state="visible", timeout=5_000)
+        message.hover(timeout=5_000)
         try:
             message.scroll_into_view_if_needed(timeout=2000)
         except:
             pass  # In case hover doesn't bring it into view
 
-        emoji_btn = message.get_by_role("button", name=re.compile("react", re.I))
+        emoji_btn = message.get_by_role("button", name=re.compile("react", re.I)).nth(0)
 
         try:
             emoji_btn.wait_for(state="visible", timeout=2_000)
@@ -266,6 +271,9 @@ def react(message: Locator, page: Page, tries: int = 0) -> None:
         else:
             print(f"Final failure in react(): {e}")
 
+def detect(message:Locator, page: Page) -> None:
+    text = f"`Detected Message Type : {ex.get_mess_type(message)}`"
+    rep.reply(page=page, locator=message, text=text)
 
 
 # -------- -------- -------- -------- -------- -------- -------- -------- -------- --------

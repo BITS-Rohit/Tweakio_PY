@@ -12,7 +12,11 @@ pool = [
     "showchat",
     "add",
     "remove",
-    "setq"
+    "setq",
+    "showlist",
+    "savevid",
+    "banlist",
+    "detect"
 ]
 
 
@@ -52,5 +56,7 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
             helper.banlist(page=page, locator=message)
         case 'saveVid' :
             helper.save_video(page=page,message=message)
+        case "detect":
+            helper.detect(message=message,page=page)
         case _:
             print(text)

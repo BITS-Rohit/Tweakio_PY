@@ -3,7 +3,7 @@ name: WhatsApp Bot Agent
 on:
   push:
     branches:
-      - main
+      - test #Changed it for the test branch activate only , u can change it to ur branch name
   workflow_dispatch:
 
 

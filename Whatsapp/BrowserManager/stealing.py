@@ -158,33 +158,33 @@ def _custom_js_spoof_payload():
 
 
 headers = {
-    # ---- This is for the network calls
-    # "Content-Type": "application/json",
-    # "Origin": "https://www.example.com",
-    # "Referer": "https://www.example.com/home",
 
-    # "Sec-Ch-Ua": '"Chromium";v="120", "Google Chrome";v="120", "Not-A.Brand";v="99"',
-    # "Sec-Ch-Ua-Mobile": "?0", # 0, 1
-    # "Sec-Ch-Ua-Platform": "Windows", #Windows, macOS, Android
-    # "Viewport-Width": "1920", # Optional, but can help match screen
-
-    # "Accept": "text/html,application/xhtml+xml, application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-    # "Accept-Encoding": "gzip, deflate, br",
-    # "Accept-Language": "en-US, en;q=0.9",
-    # "Cache-Control": "no-cache",
-    # "Upgrade-Insecure-Requests": "1",
-    # "DNT": "1",  # Do Not Track enabled
     "Origin": "https://web.whatsapp.com",
     "Referer": "https://web.whatsapp.com/",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) "
                   "Chrome/138.0.0.0 Safari/537.36",
-
-    # "Sec-Fetch-Dest": "document",
-    # "Sec-Fetch-Mode": "navigate",
-    # "Sec-Fetch-Site": "none",
-    # "Sec-Fetch-User": "?1",
 }
+# ---- This is for the network calls
+# "Content-Type": "application/json",
+# "Origin": "https://www.example.com",
+# "Referer": "https://www.example.com/home",
+
+# "Sec-Ch-Ua": '"Chromium";v="120", "Google Chrome";v="120", "Not-A.Brand";v="99"',
+# "Sec-Ch-Ua-Mobile": "?0", # 0, 1
+# "Sec-Ch-Ua-Platform": "Windows", #Windows, macOS, Android
+# "Viewport-Width": "1920", # Optional, but can help match screen
+
+# "Accept": "text/html,application/xhtml+xml, application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+# "Accept-Encoding": "gzip, deflate, br",
+# "Accept-Language": "en-US, en;q=0.9",
+# "Cache-Control": "no-cache",
+# "Upgrade-Insecure-Requests": "1",
+# "DNT": "1",  # Do Not Track enabled
+# "Sec-Fetch-Dest": "document",
+# "Sec-Fetch-Mode": "navigate",
+# "Sec-Fetch-Site": "none",
+# "Sec-Fetch-User": "?1",
 
 
 
