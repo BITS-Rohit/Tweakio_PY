@@ -8,15 +8,15 @@ from playwright.sync_api import Page
 from Whatsapp import selectors_config as sc, SETTINGS, HumanAction as ha
 
 # ─── Screenshot setup ──────────────────────────────────────────────────────────
-ROOT_DIR        = Path(__file__).resolve().parent.parent
-SCREENSHOT_DIR  = ROOT_DIR / "screenshots"
+ROOT_DIR = Path(__file__).resolve().parent.parent
+SCREENSHOT_DIR = ROOT_DIR / "screenshots"
 SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 preferred_login_method = SETTINGS.LOGIN_METHOD
 
 
 def login(page: Page, browser) -> bool:
-    # 1) Navigate & sanity check
+    #  Navigate & sanity check
     page.goto("https://web.whatsapp.com/", timeout=60_000)
     page.wait_for_load_state("networkidle", timeout=50_000)
     if not page.url.startswith("https://web.whatsapp.com/"):
@@ -24,7 +24,7 @@ def login(page: Page, browser) -> bool:
         return False
     print("✅ WhatsApp Web reached")
 
-    # 2) Try QR or code flow
+    # ry QR or code flow
     if not _scanner_login(page, browser):
         # on failure, dump a screenshot
         ts = int(time.time())
@@ -33,9 +33,9 @@ def login(page: Page, browser) -> bool:
         print(f"⚠️  Saved debug screenshot to {out}")
         return False
 
-    # 3) Dismiss any startup popup
+    #  Dismiss any startup popup
     time.sleep(5)
-    popup = sc.startup_popup(page)
+    popup = sc.startup_popup_locator(page)
     if popup.is_visible():
         popup.click()
         print("▶️ Dismissed startup popup")

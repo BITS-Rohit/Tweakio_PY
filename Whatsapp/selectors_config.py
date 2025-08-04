@@ -187,11 +187,13 @@ def isVideo(message: 'Locator') -> 'Locator':
 
 def isReacted(message : 'Locator') -> bool:
     """check is the message is reacted or not"""
-    return message.get_by_role("button",name=re.compile("reaction.*👍",re.I))
+    return message.get_by_role("button",name=re.compile("reaction.*👍",re.I),exact=True)
 
 def is_Voice_Message(message: 'Locator') -> 'Locator':
     """Checks if the message is a voice note."""
-    return message.locator("xpath=.//span[contains(@aria-label,'voice message')]")
+    l1 = message.locator("xpath=.//span[contains(@aria-label,'voice message')]")
+    if l1.is_visible() : return l1
+    return message.locator("div[role='button'] >> span[data-icon='mic']")
 
 
 def is_gif(message: 'Locator') -> 'Locator':
@@ -233,17 +235,12 @@ def isQuotedText(message: 'Locator') -> 'Locator':
     return quote_container.get_by_role("button", name=re.compile("Quoted message", re.I))
 
 
-def get_QuotedText(message: 'Locator') -> 'Locator':
+def get_QuotedText_locator(message: 'Locator') -> 'Locator':
     """Returns the locator for the quoted-mention span inside a quoted message."""
     return isQuotedText(message).locator("span.quoted-mention")
 
 # -- System -- #
 
-def startup_popup(page: 'Page') -> 'Locator':
+def startup_popup_locator(page: 'Page') -> 'Locator':
     """Returns the startup continue popup button locator."""
     return page.get_by_role("button", name=re.compile("continue", re.I))
-
-
-# ------ Read Handles ---- #
-def unread():
-    pass

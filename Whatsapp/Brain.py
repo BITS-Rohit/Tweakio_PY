@@ -7,6 +7,7 @@ from playwright.sync_api import Locator, Page
 from Whatsapp import SETTINGS, selectors_config as sc, Extra as ex, HumanAction as ha, ___ as _, Methods as helper, \
     Reply as rep, post_process as process, pre_dir as pwd
 from Whatsapp.BrowserManager import CusBrowser
+from Whatsapp.SETTINGS import BOT_NUMBER
 
 # ----------------------------------------------------------------------------------------------------------------------
 debug = SETTINGS.DEBUG
@@ -34,7 +35,7 @@ def Start_Handling(p: Page) -> None:
 
     try:
         try:
-            ex.MessageToChat(page)
+            # ex.MessageToChat(page)
             print("-- Message to owner done --")
         except Exception as e:
             print(f"Error in message to chat : {e}")
@@ -72,32 +73,40 @@ def Start_Handling(p: Page) -> None:
 def _check_messages(chat: Locator, y: int) -> None:
     try:
         name = sc.getChatName(chat)
-        unread = ex.is_unread(chat)
-        if unread == 0:
-            print(f"-- --  Skipping Top chat [no - {y}] with name - {name} -- -- {Time()}")
-            return
+        if name == "":
+            print("Error getting chat name : ")
 
+        Personal_auth = PersonalChatCheck(chat=chat)
+        if not Personal_auth:
+            unread = ex.is_unread(chat)
+            if unread == 0:
+                print(f"-- --  Skipping Top chat [no - {y}] with name - {name} -- -- {Time()}")
+                return
+        else : print(f"Personal Chat checking. [{name}]")
+
+        print(f"Opening Top chat [no - {y}] with name -  {name} ")
         ha.move_mouse_to_locator(page, chat)
         print("--Top chat has new messages--")
         chat.click()
 
-        if name == "":
-            print("Error getting chat name : ")
-            print(f"Opening Top chat [no - {y}] with name -  {name} ")
-
         messages = sc.messages(page)
         print(f"Total messages fetched : {messages.count()}")
+
         for i in range(messages.count()):
+
             message = messages.nth(i)
             text = sc.get_message_text(message).strip()
+
+            # Only text with cmds there or not checking
             if not text or text.split(" ")[0].lower() not in admin_cmds: continue
             _auth_handle(message=message, text=text, chat=chat)
-        ex.mark_unread(page=page, chat=chat)
+
+        ex.do_unread(page=page, chat=chat)
     except Exception as e:
         print(f"Error in check messages : {e}")
 
 
-def _auth_handle(message: Locator, text: str, chat: Locator):
+def _auth_handle(message: Locator, text: str, chat: Locator) -> None:
     try:
         t = text.split(" ", 1)[0].lower().strip()
         print("Message : " + text)
@@ -116,39 +125,35 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
             print("[Seen ID containing message]")
             return
 
+        name = sc.getChatName(chat)
         ex.trace_message(_.seen_ids, chat, message)
         mess_out = sc.is_message_out(message)
 
         # --- Auth Checks ---
-        auth , P_AUTH , sender= False,False,""
+        user_auth , Admin_AUTH , sender= False,False,""
         def authChecks():
-            nonlocal auth,P_AUTH,sender
+            nonlocal user_auth,Admin_AUTH,sender
             try:
-                auth = SETTINGS.GLOBAL_MODE or mess_out
+                user_auth = SETTINGS.GLOBAL_MODE or mess_out or PersonalChatCheck(chat)
                 sender_raw = ex.getSenderID(message)
                 sender = (sender_raw or "").replace(" ", "").replace("+", "")
-                P_AUTH = sender in _.admin_list or mess_out
+                Admin_AUTH = sender in _.admin_list or mess_out or PersonalChatCheck(chat)
             except Exception as e:
-                print(f"Error in auth checks : {e}")
+                print(f"Error in user_auth checks : {e}")
         authChecks()
 
-        name = sc.getChatName(chat)
+
         print(f"Prefix : {t}")
 
         # --- Pause Handling ---
-        if pause_mode:
-            if t in ["pause_off", "pause_show"] and P_AUTH:
-                _Admin_Process(message, text)
-            else:
-                print(f"Paused. Ignoring '{t}' from {sender}")
-            return
+        pause_handle(P_AUTH=Admin_AUTH,t=t,sender=sender,text=text,message=message)
 
         # --- Ban/Unban Handling ---
         check = False
         def Ban_Handle():
             nonlocal check
             GID = ex.getGroudID(message)
-            if P_AUTH and t in ["--ban--", "--unban--"]:
+            if Admin_AUTH and t in ["--ban--", "--unban--"]:
                 if not GID:
                     print("Error: Chat name is empty during ban/unban check.")
                     return
@@ -197,10 +202,10 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
         text = text.lower()
 
         def cmd_exec():
-            if auth and t in user_cmds:
+            if user_auth and t in user_cmds:
                 _process_cmd(message=message, text=text)
 
-            elif P_AUTH and t in admin_cmds + user_cmds:
+            elif Admin_AUTH and t in admin_cmds + user_cmds:
                 _Admin_Process(message=message, fun_name=text)
 
             else:
@@ -208,7 +213,7 @@ def _auth_handle(message: Locator, text: str, chat: Locator):
                 rep.reply(page=page, locator=message, text=f"Unauthorized command '{t}' from {sender}")
 
         try: cmd_exec()
-        except Exception as e : print(f"Error in cmd_exec // auth handle : {e}")
+        except Exception as e : print(f"Error in cmd_exec // user_auth handle : {e}")
 
         print("------------- Command processed  ---------------")
 
@@ -287,3 +292,32 @@ def _natural_cmd(message: Locator, text: str) -> None:
         rep.reply(page=page, locator=message, text=f"❗ Natural command error:\n`{e}`")
 
 def Time()-> str: return datetime.now().strftime("%-I : %M:%S %p").lower()
+
+
+def PersonalChatCheck(chat : Locator) -> bool:
+    try:
+        if debug : print("In personal Chat check")
+        you = chat.get_by_role("gridcell").get_by_text("(You)",exact=True)
+
+        if you.is_visible():
+            ha.move_mouse_to_locator(page=page, locator=chat)
+            chat.click()
+            messages = sc.messages(page=page)
+            message = messages.nth(0) # Any message can define the authentication
+
+            num = ex.getJID_mess(message).replace("@c.us", "")
+            print(f"NUMBER : [{num}]")
+            return BOT_NUMBER in num  # Authorisation complete .
+        else :print("No (You) found.")
+    except Exception as e:
+        print(f"Error in Personal Chat Check [{e}]")
+    return False
+
+
+def pause_handle(P_AUTH: bool , t : str ,sender:str ,text :str , message : Locator) -> None :
+    if pause_mode:
+        if t in ["pause_off", "pause_show"] and P_AUTH:
+            _Admin_Process(message, text)
+        else:
+            print(f"Paused. Ignoring '{t}' from {sender}")
+        return

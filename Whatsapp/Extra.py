@@ -50,7 +50,7 @@ def MessageToChat(page: Page) -> None:
 
 
 def getJID_mess(message: Locator) -> str:
-    """Returns the JID of the message"""
+    """Returns the JID of the message  like : 7678xxxxxx@c.us"""
     data_id = sc.get_dataID(message)
     if not data_id or "_" not in data_id:
         return ""
@@ -229,7 +229,7 @@ def is_unread(chat: Locator) -> int:
         return 0
 
 
-def mark_unread(page: Page, chat: Locator) -> None:
+def do_unread(page: Page, chat: Locator) -> None:
     """Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'."""
     try:
         ha.move_mouse_to_locator(page, chat)
