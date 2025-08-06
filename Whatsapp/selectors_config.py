@@ -70,7 +70,7 @@ def chat_items(page: 'Page') -> 'Locator':
 
 def getChat_lowImg(chat: 'Locator') -> str:
     """Extracts the low-quality image (thumbnail) from a chat preview item."""
-    if chat.locator("span[data-icon='default-group-refreshed']").is_visible() : return "Default group icon"
+    if chat.locator("span[data-icon='default-group-refreshed']").is_visible(): return "Default group icon"
     if chat.locator("img").is_visible():
         return chat.locator("img").first.get_attribute("src")
     return ""
@@ -97,7 +97,6 @@ def is_community(chat: 'Locator') -> str:
     return ""
 
 
-
 def Profile_header(page: 'Page') -> 'Locator':
     """
     Returns the profile header button locator used to open contact details.
@@ -109,6 +108,7 @@ def Profile_header(page: 'Page') -> 'Locator':
 def qr_canvas(page: 'Page') -> 'Locator':
     """Returns the QR canvas image for login."""
     return page.get_by_role("img", name=re.compile(r"scan.*qr", re.I))
+
 
 # -------------------- Sidebar Navigation -------------------- #
 
@@ -130,6 +130,7 @@ def _side_Bar_channels(page: 'Page') -> 'Locator':
 def _side_Bar_Communities(page: 'Page') -> 'Locator':
     """Returns the sidebar button locator for 'Communities'."""
     return page.locator("header").first.get_by_role("button", name=re.compile("communities", re.I))
+
 
 # -------------------- Messages Section -------------------- #
 
@@ -167,6 +168,57 @@ def get_dataID(message: 'Locator') -> str:
     """Returns the unique data-id attribute of a message."""
     return message.get_attribute("data-id") or ""
 
+
+# -------------------- Media Send  -------------------- #
+def plus_rounded_icon(page: 'Page') -> 'Locator':
+    """
+    It is a locator for the plus icon in the message box for opening menu with options like : image , videos ,documents to send
+    :param page:
+    :return:
+    """
+    return page.locator("button >> span[data-icon='plus-rounded']")
+
+
+def document(page: 'Page') -> 'Locator':
+    """Safely locates the 'Document' upload option in the menu"""
+    return page.get_by_role("button", name="Document")
+
+
+def photos_videos(page: 'Page') -> 'Locator':
+    """Safely locates the 'Photos & videos' upload option in the menu"""
+    return page.get_by_role("button", name="Photos & videos")
+
+
+def camera(page: 'Page') -> 'Locator':
+    """Safely locates the 'Camera' upload option in the menu"""
+    return page.get_by_role("button", name="Camera")
+
+
+def audio(page: 'Page') -> 'Locator':
+    """Safely locates the 'Audio' upload option in the menu"""
+    return page.get_by_role("button", name="Audio")
+
+
+def contact(page: 'Page') -> 'Locator':
+    """Safely locates the 'Contact' upload option in the menu"""
+    return page.get_by_role("button", name="Contact")
+
+
+def poll(page: 'Page') -> 'Locator':
+    """Safely locates the 'Poll' upload option in the menu"""
+    return page.get_by_role("button", name="Poll")
+
+
+def event(page: 'Page') -> 'Locator':
+    """Safely locates the 'Event' upload option in the menu"""
+    return page.get_by_role("button", name="Event")
+
+
+def new_sticker(page: 'Page') -> 'Locator':
+    """Safely locates the 'New sticker' upload option in the menu"""
+    return page.get_by_role("button", name="New sticker")
+
+
 # -------------------- Message Type Checkers -------------------- #
 
 def isPic(message: 'Locator') -> 'Locator':
@@ -185,14 +237,16 @@ def isVideo(message: 'Locator') -> 'Locator':
     """Checks if the message contains a playable video icon."""
     return message.locator("xpath=.//span[contains(@data-icon, 'media-play')]")
 
-def isReacted(message : 'Locator') -> bool:
+
+def isReacted(message: 'Locator') -> bool:
     """check is the message is reacted or not"""
-    return message.get_by_role("button",name=re.compile("reaction.*👍",re.I),exact=True)
+    return message.get_by_role("button", name=re.compile("reaction 👍", re.I), exact=True).is_visible()
+
 
 def is_Voice_Message(message: 'Locator') -> 'Locator':
     """Checks if the message is a voice note."""
     l1 = message.locator("xpath=.//span[contains(@aria-label,'voice message')]")
-    if l1.is_visible() : return l1
+    if l1.is_visible(): return l1
     return message.locator("div[role='button'] >> span[data-icon='mic']")
 
 
@@ -203,7 +257,8 @@ def is_gif(message: 'Locator') -> 'Locator':
 
 def is_animated_sticker(message: 'Locator') -> 'Locator':
     """Returns locator if an animated sticker is present."""
-    return message.locator("xpath=.//div[@role='button' and contains(@label, 'Sticker') and img[contains(@src, 'blob:')] and canvas]")
+    return message.locator(
+        "xpath=.//div[@role='button' and contains(@label, 'Sticker') and img[contains(@src, 'blob:')] and canvas]")
 
 
 def is_plain_sticker(message: 'Locator') -> 'Locator':
@@ -219,10 +274,11 @@ def is_lottie_animation_sticker(message: 'Locator') -> 'Locator':
 def isSticker(message: 'Locator') -> bool:
     """Returns True if any sticker type is detected."""
     return (
-        is_animated_sticker(message).is_visible() or
-        is_lottie_animation_sticker(message).is_visible() or
-        is_plain_sticker(message).is_visible()
+            is_animated_sticker(message).is_visible() or
+            is_lottie_animation_sticker(message).is_visible() or
+            is_plain_sticker(message).is_visible()
     )
+
 
 # -------------------- Quoted Message Utilities -------------------- #
 
@@ -238,6 +294,7 @@ def isQuotedText(message: 'Locator') -> 'Locator':
 def get_QuotedText_locator(message: 'Locator') -> 'Locator':
     """Returns the locator for the quoted-mention span inside a quoted message."""
     return isQuotedText(message).locator("span.quoted-mention")
+
 
 # -- System -- #
 

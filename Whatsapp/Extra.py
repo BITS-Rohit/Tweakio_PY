@@ -8,7 +8,7 @@ import time
 
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd
+from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd, ___ as _
 
 
 def MessageToChat(page: Page) -> None:
@@ -161,8 +161,8 @@ def get_datetime():
 # --- ---- Seen IDs ---- ---
 def dump_ids(seen: dict) -> None:
     """Dump the seen dict to a pickle file."""
-    if not seen:
-        print("Empty Seen ids map")
+    if not seen :
+        print("Empty Seen ids map, Not saving")
         return
     with open(pwd.get_saved_data_ids(), "wb") as f:
         pickle.dump(seen, f)
@@ -180,8 +180,8 @@ def pick_ids() -> dict:
 # --- ---- Ban List ---- ---
 def dump_banlist(banlist: list) -> None:
     """Dump the banlist (list) to a pickle file."""
-    if not banlist:
-        print("Empty Banlist")
+    if not banlist and not _.ban_list:
+        print("Empty Banlist with no change , Not saving.")
         return
     with open(pwd.get_ban_list(), "wb") as f:
         pickle.dump(banlist, f)
@@ -198,8 +198,8 @@ def pick_banlist() -> list:
 
 def dump_admin(admin_list: list) -> None:
     """Dump the list of admin to a pickle file"""
-    if not admin_list:
-        print("Empty Admin list")
+    if not admin_list and not _.admin_change:
+        print("Empty Admin list with no change , Not saving.")
         return
     with open(pwd.get_admin_list(), "wb") as f:
         pickle.dump(admin_list, f)

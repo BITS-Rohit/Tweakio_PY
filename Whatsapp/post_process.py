@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import Methods as helper, Reply as rep
+from Whatsapp import Methods as helper, Reply as rep, pre_dir as pd, Media as med
 
 pool = [
     "showq",
@@ -16,7 +16,9 @@ pool = [
     "showlist",
     "savevid",
     "banlist",
-    "detect"
+    "detect",
+    "send",
+    "inject"
 ]
 
 
@@ -26,7 +28,7 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
         helper.react(message=message, page=page)
     else:
         print(text)
-        rep.reply(page=page, locator=message, text=f"`{text}`" + "`Plz re-try with correct command.`")
+        rep.reply(page=page, locator=message, text=f"`{text}`" + f"`Re-try with right cmd in the pool.` \n `[{pool}]`")
 
     # ---- Methods Implementation --- #
     match f_name:
@@ -54,9 +56,13 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
             helper.showlist(page=page, locator=message)
         case 'banlist':
             helper.banlist(page=page, locator=message)
-        case 'saveVid' :
-            helper.save_video(page=page,message=message)
+        case 'saveVid':
+            helper.save_video(page=page, message=message)
         case "detect":
-            helper.detect(message=message,page=page)
+            helper.detect(message=message, page=page)
+        case "inject":
+            med.sendMedia(page=page, files=[f"{pd.files}/vid.mp4"],mediatype="image")
+        case "send":
+            med.AddMedia(page=page, file=f"{pd.files}/test.jpg",mediatype="image")
         case _:
             print(text)

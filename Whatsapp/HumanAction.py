@@ -67,7 +67,7 @@ def human_send(page: Page, locator: Locator, text: str):
 
     try:
         if len(text) <= 50:
-            page.keyboard.type(text, delay=random.uniform(0.05, 0.15))
+            page.keyboard.type(text, delay=random.uniform(0.82, 1.3))
         else:
             pyperclip.copy(text)
             page.keyboard.press("Control+V")

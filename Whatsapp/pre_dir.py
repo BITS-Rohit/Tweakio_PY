@@ -2,16 +2,21 @@
 Here we have cleanly defined all the directories we have created with desc of why they exist.
 """
 import pathlib as pa
+from os import mkdir
 
 from Whatsapp import SETTINGS
 
 # -----------------------------------------------------------------------------------------------------------------------
 rootDir = pa.Path(__file__).resolve().parent
+
+# ----- for whatsapp session files ----- #
 sessionDir = rootDir / "Wa_Session"
 sessionDir.mkdir(exist_ok=True)
 _initialized_profiles = set()
 
-
+# ----- for files like doc , img , vid , audio ----- #
+files = rootDir / "files"
+files.mkdir(exist_ok = True)
 # -----------------------------------------------------------------------------------------------------------------------
 
 def designatedProfile(profile: str) -> pa.Path:

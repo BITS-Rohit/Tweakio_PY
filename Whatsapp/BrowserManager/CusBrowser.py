@@ -67,7 +67,7 @@ class CusBrowser:
             traces_dir=traces_dir,
             args=[
                 "--no-sandbox",
-                "--disable-setuid-sandbox",
+                # "--disable-setuid-sandbox",  use only when running inside docker or GitHub runner as root else avoid.
                 "--disable-infobars",
                 "--window-size=1280,800",
             ],

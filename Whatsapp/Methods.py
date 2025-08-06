@@ -105,6 +105,7 @@ def remove_admin(page: Page, locator: Locator, num: str) -> None:
     """
     if num in _.admin_list:
         _.admin_list.remove(num)
+        _.admin_change = True # mark for the admin change
         text = "`Removal of admin done.`"
     else:
         text = "`Given number was not in admin list`"

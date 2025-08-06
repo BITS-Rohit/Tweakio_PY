@@ -33,3 +33,6 @@ Whatsapp/Wa_Session
 # Playwright test artifacts
 test-results/
 playwright-report/
+
+# for img , audio , vid , doc files
+Whatsapp/files/*
