@@ -61,8 +61,15 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
         case "detect":
             helper.detect(message=message, page=page)
         case "inject":
-            med.sendMedia(page=page, files=[f"{pd.files}/vid.mp4"],mediatype="image")
+            text = "`--[Here is your file]--`"
+            rep.reply_media(page=page, mediatype="doc", message=message, sendMedType="inject",
+                            file=[f"{pd.files}/test.mp3"], text=text)
         case "send":
-            med.AddMedia(page=page, file=f"{pd.files}/test.jpg",mediatype="image")
+            text = "`--[Here is your file]--`"
+            # rep.reply_(page=page, locator=message, text=f"`{text}`")
+            # med.AddMedia(page,file=f"{pd.files}/test.jpg",mediatype="image")
+            rep.reply_media(page=page, mediatype="image", message=message,file=[f"{pd.files}/test.jpg"], text=text,sendMedType="add")
+            rep.reply_media(page=page, mediatype="audio", message=message,file=[f"{pd.files}/test.mp3"], text=text,sendMedType="add")
+
         case _:
             print(text)

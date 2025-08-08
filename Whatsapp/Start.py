@@ -74,6 +74,7 @@ if __name__ == '__main__':
                     break
                 except Exception as e:
                     print(f"❗ Retrying new_page: {e}")
+                    browser = CusBrowser.getInstance() # Create new instance
                     time.sleep(1)
             else:
                 if not page:

@@ -8,15 +8,15 @@ from Whatsapp import HumanAction as ha
 from Whatsapp import selectors_config as sc
 
 # ----------------------------------------------------------------  #
-IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
-VIDEO_EXTS = {".mp4", ".mov", ".3gp", ".mkv"}
+IMAGE_EXTN = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+VIDEO_EXTN = {".mp4", ".mov", ".3gp", ".mkv"}
 
 
 def infer_media_type_from_file(filepath: str) -> str:
     ext = Path(filepath).suffix.lower()
-    if ext in IMAGE_EXTS:
+    if ext in IMAGE_EXTN:
         return "image"
-    if ext in VIDEO_EXTS:
+    if ext in VIDEO_EXTN:
         return "video"
     return "doc"
 
@@ -105,23 +105,17 @@ def AddMedia(page: Page, file: str, mediatype: str = "doc") -> None:
             print(f"❌ File not found: {file}")
             return
         chooser.set_files(str(p.resolve()))
-
-        page.wait_for_timeout(600)
-        page.keyboard.press("Enter")
-        page.wait_for_timeout(300)
-        page.keyboard.press("Enter")
-
         print(f"✅ Sent {mediatype}: {file}")
 
     except Exception as e:
         print(f"Error in AddMedia: {e}")
 
-
-def sendMedia(page: Page, files: list[str], mediatype: str = "doc") -> None:
-    try:
-        InjectMedia(page=page, files=files, mediatype=mediatype)
-        page.keyboard.press("Enter")
-    except Exception as e:
-        print(f"Error in Add Media : {e}")
-        page.keyboard.press("Escape", delay=random.uniform(0.2, 0.5))
-        page.keyboard.press("Escape", delay=random.uniform(0.1, 0.3))
+#
+# def sendMedia(page: Page, files: list[str], mediatype: str = "doc") -> None:
+#     try:
+#         InjectMedia(page=page, files=files, mediatype=mediatype)
+#         page.keyboard.press("Enter")
+#     except Exception as e:
+#         print(f"Error in Add Media : {e}")
+#         page.keyboard.press("Escape", delay=random.uniform(0.2, 0.5))
+#         page.keyboard.press("Escape", delay=random.uniform(0.1, 0.3))

@@ -8,7 +8,7 @@ import time
 
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd, ___ as _
+from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd, ___ as _ ,SETTINGS
 
 
 def MessageToChat(page: Page) -> None:
@@ -63,7 +63,8 @@ def getSenderID(message: Locator) -> str:
     Returns the name if it does not have a sender else returns the number of senders
     """
     raw = sc.get_dataID(message)
-    def getfromlid()->str:
+
+    def getfromlid() -> str:
         try:
             attr = message.locator("div.copyable-text[data-pre-plain-text]").get_attribute("data-pre-plain-text")
             if not attr or "]" not in attr:
@@ -74,20 +75,23 @@ def getSenderID(message: Locator) -> str:
         except Exception as e:
             print(f"Error extracting sender: {e}")
             return ""
-    if "@lid" in raw :
-        return getfromlid()
-    elif "@c.us" in raw and "@g.us" in raw :
-        return raw.split("_",3)[3].replace("@c.us","")
-    elif "@c.us" in raw:
-        return raw.split("_",2)[1].replace("@c.us","")
-    else :return ""
 
-def getGroudID(message : Locator) -> str:
+    if "@lid" in raw:
+        return getfromlid()
+    elif "@c.us" in raw and "@g.us" in raw:
+        return raw.split("_", 3)[3].replace("@c.us", "")
+    elif "@c.us" in raw:
+        return raw.split("_", 2)[1].replace("@c.us", "")
+    else:
+        return ""
+
+
+def getGroudID(message: Locator) -> str:
     raw = sc.get_dataID(message)
     if "@g.us" in raw:
-        return raw.split("_",2)[1]
-    else :return ""
-
+        return raw.split("_", 2)[1]
+    else:
+        return ""
 
 
 def getDirection(message: Locator) -> str:
@@ -125,7 +129,7 @@ def get_Timestamp(message: Locator) -> str:
 
 
 def trace_message(seen_messages: dict, chat: Locator, message: Locator) -> None:
-    try :
+    try:
         data_id = sc.get_dataID(message)
         if data_id in seen_messages:
             return
@@ -142,7 +146,8 @@ def trace_message(seen_messages: dict, chat: Locator, message: Locator) -> None:
             "direction": getDirection(message),
             "type": get_mess_type(message)
         }
-    except Exception as e : print(f"Error in Trace message : {e}")
+    except Exception as e:
+        print(f"Error in Trace message : {e}")
 
 
 def get_File_name(message: Locator, chat: Locator) -> str:
@@ -161,7 +166,7 @@ def get_datetime():
 # --- ---- Seen IDs ---- ---
 def dump_ids(seen: dict) -> None:
     """Dump the seen dict to a pickle file."""
-    if not seen :
+    if not seen:
         print("Empty Seen ids map, Not saving")
         return
     with open(pwd.get_saved_data_ids(), "wb") as f:
@@ -169,12 +174,17 @@ def dump_ids(seen: dict) -> None:
 
 
 def pick_ids() -> dict:
-    """Load and return the seen dict from a pickle file."""
+    """Load and return the seen dict from a pickle file safely."""
     path = pwd.get_saved_data_ids()
-    if not path.exists():
+    if not path.exists() or path.stat().st_size == 0:
         return {}
-    with open(path, "rb") as f:
-        return pickle.load(f)
+    try:
+        with open(path, "rb") as f:
+            return pickle.load(f)
+    except (EOFError, pickle.UnpicklingError) as e:
+        print(f"[ERROR] Failed to load seen_ids from {path}: {e}")
+        path.unlink(missing_ok=True)
+        return {}
 
 
 # --- ---- Ban List ---- ---
@@ -271,3 +281,5 @@ def cleanFolder(folder: pa.Path) -> None:
                     shutil.rmtree(item)
             except Exception as e:
                 print(f"⚠️ Could not delete {item}: {e}")
+
+
