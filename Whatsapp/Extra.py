@@ -8,7 +8,7 @@ import time
 
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd, ___ as _ ,SETTINGS
+from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd, ___ as _
 
 
 def MessageToChat(page: Page) -> None:
@@ -190,7 +190,7 @@ def pick_ids() -> dict:
 # --- ---- Ban List ---- ---
 def dump_banlist(banlist: list) -> None:
     """Dump the banlist (list) to a pickle file."""
-    if not banlist and not _.ban_list:
+    if not banlist and not _.ban_change:
         print("Empty Banlist with no change , Not saving.")
         return
     with open(pwd.get_ban_list(), "wb") as f:

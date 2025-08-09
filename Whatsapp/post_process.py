@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, Locator
 
-from Whatsapp import Methods as helper, Reply as rep, pre_dir as pd, Media as med
+from Whatsapp import Methods as helper, Reply as rep, pre_dir as pd
 
 pool = [
     "showq",
@@ -18,7 +18,8 @@ pool = [
     "banlist",
     "detect",
     "send",
-    "inject"
+    "inject",
+    "ai"
 ]
 
 
@@ -60,6 +61,8 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
             helper.save_video(page=page, message=message)
         case "detect":
             helper.detect(message=message, page=page)
+        case "ai":
+            helper.ai(page=page, message=message,ask=f_info)
         case "inject":
             text = "`--[Here is your file]--`"
             rep.reply_media(page=page, mediatype="doc", message=message, sendMedType="inject",

@@ -74,7 +74,7 @@ def _typing(page: Page, text: str) -> None:
     """
     lines = text.split("\n")
     for i, line in enumerate(lines):
-        page.keyboard.type(line)
+        page.keyboard.type(line,delay=random.randint(601, 699))
         if i < len(lines) - 1:
             page.keyboard.press("Shift+Enter")
 

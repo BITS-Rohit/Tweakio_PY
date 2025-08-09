@@ -5,11 +5,14 @@ import time
 
 from playwright.sync_api import Page, Locator
 
+from Langchain_AI import run_gemini
 from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
                       HumanAction as ha, selectors_config as sc)
 from Whatsapp.selectors_config import isReacted
 
-
+# ----------------
+gemini = run_gemini.Gemini()
+# ----------------
 def setq(page: Page, locator: Locator, quant: str) -> None:
     """
     set the quantifier to new given q and sends feedback to the user
@@ -275,6 +278,12 @@ def react(message: Locator, page: Page, tries: int = 0) -> None:
 def detect(message:Locator, page: Page) -> None:
     text = f"`Detected Message Type : {ex.get_mess_type(message)}`"
     rep.reply(page=page, locator=message, text=text)
+
+# ------------  ----------- AI ------------ ------------ #
+def ai(page: Page, message: Locator, ask: str) -> None:
+    """Gets AI answer for the given ask string and replies via the page"""
+    response = gemini.chat(user_input=ask)  # Call your AI synchronously
+    rep.reply(page=page, locator=message, text=response)
 
 
 # -------- -------- -------- -------- -------- -------- -------- -------- -------- --------

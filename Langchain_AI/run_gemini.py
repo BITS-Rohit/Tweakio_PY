@@ -1,6 +1,6 @@
 import os
 import warnings
-import asyncio
+import json
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_community.chat_message_histories import FileChatMessageHistory
 from langchain_core._api.deprecation import LangChainDeprecationWarning
@@ -24,7 +24,7 @@ class Gemini:
     def __init__(self):
         self.api = SETTINGS.GEM_API_KEY
         if not self.api:
-            raise Exception("GOOGLE_API_KEY environment variable not set")
+            raise Exception("GEM_API_KEY environment variable not set")
 
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",
@@ -36,7 +36,7 @@ class Gemini:
         )
 
         self.memory = ConversationSummaryBufferMemory(
-            max_token_limit=2000,
+            max_token_limit=1000,
             input_key="user_input",
             output_key="user_output",
             llm=self.llm,
@@ -50,9 +50,21 @@ class Gemini:
 
         def get_history(session_id: str):
             path = os.path.join(self.base, f"{session_id}.json")
+
+            # Create or repair file if missing/invalid
             if not os.path.exists(path):
                 with open(path, "w", encoding="utf-8") as f:
                     f.write("[]")
+            else:
+                try:
+                    content = open(path, "r", encoding="utf-8").read().strip()
+                    if not content:
+                        raise ValueError("Empty file")
+                    json.loads(content)
+                except (json.JSONDecodeError, ValueError):
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write("[]")
+
             return FileChatMessageHistory(file_path=path, ensure_ascii=False, encoding="utf-8")
 
         def load_to_memory(session_id: str):
@@ -64,7 +76,7 @@ class Gemini:
 
         load_to_memory("Google")
 
-        async def chaining(inputs: dict):
+        def chaining_sync(inputs: dict):
             query = inputs.get(self.memory.input_key)
             if isinstance(query, HumanMessage):
                 query = query.content
@@ -72,15 +84,17 @@ class Gemini:
                 query = str(query)
 
             self.memory.chat_memory.add_message(HumanMessage(content=query))
-            response = await self.llm.ainvoke(self.memory.chat_memory.messages)
+            response = self.llm.invoke(self.memory.chat_memory.messages)
 
-            asyncio.create_task(
-                self._save_context_async(query, response.content)
+            # Save conversation
+            self.memory.save_context(
+                {self.memory.input_key: query},
+                {self.memory.output_key: response.content}
             )
 
             return {self.memory.output_key: response.content}
 
-        self.chain = RunnableLambda(chaining)
+        self.chain = RunnableLambda(chaining_sync)
 
         self.convo = RunnableWithMessageHistory(
             self.chain,
@@ -89,28 +103,9 @@ class Gemini:
             output_messages_key=self.memory.output_key,
         )
 
-    async def _save_context_async(self, query, output):
-        await asyncio.to_thread(
-            self.memory.save_context,
-            {self.memory.input_key: query},
-            {self.memory.output_key: output}
-        )
-
-    async def chat(self, user_input: str, session_id: str = "Google") -> str:
-        out = await self.convo.ainvoke(
+    def chat(self, user_input: str, session_id: str = "Google") -> str:
+        out = self.convo.invoke(
             {self.memory.input_key: user_input},
             config={"configurable": {"session_id": session_id}},
         )
         return out.get(self.memory.output_key, "")
-
-
-async def main():
-    gemini = Gemini()
-    while True:
-        user_input = input("\nEnter your input: ")
-        reply = await gemini.chat(user_input)
-        print(f"AI: {reply}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
