@@ -36,3 +36,6 @@ playwright-report/
 
 # for img , audio , vid , doc files
 Whatsapp/files/*
+
+# history
+Langchain-AI/history/*
