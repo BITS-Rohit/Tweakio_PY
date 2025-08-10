@@ -1,3 +1,4 @@
+import os
 import signal
 import sys
 import threading
@@ -62,6 +63,15 @@ def autosave():
 
 
 if __name__ == '__main__':
+    # --- Lang Smith ----
+    if SETTINGS.LANGCHAIN_API_KEY:
+        os.environ["LANGCHAIN_API_KEY"] = SETTINGS.LANGCHAIN_API_KEY
+
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_PROJECT"] = SETTINGS.LANGCHAIN_PROJECT
+
+    # --- --- --- --- ---
+
     signal.signal(signal.SIGINT, handle_signal)
     signal.signal(signal.SIGTERM, handle_signal)
 

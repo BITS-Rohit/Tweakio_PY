@@ -55,3 +55,7 @@ LOGIN_WAIT_TIME = int(os.getenv("LOGIN_WAIT_TIME", "180_000"))
 LOGIN_METHOD = int(os.getenv("LOGIN_METHOD", "2"))  # 1 for scan, 2 for code
 GLOBAL_MODE = os.getenv("GLOBAL_MODE", "False")
 RESTART_TIME= int(os.getenv("RESTART_TIME","2"))
+
+# -- LangSmith -- #
+LANGCHAIN_API_KEY=os.getenv("LANGCHAIN_API_KEY", "")
+LANGCHAIN_PROJECT=os.getenv("LANGCHAIN_PROJECT", "Lang-Bot")

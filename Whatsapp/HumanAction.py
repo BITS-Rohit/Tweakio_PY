@@ -62,18 +62,31 @@ def move_mouse_to_locator(page, locator):
 
 
 def human_send(page: Page, locator: Locator, text: str):
+    """
+    Clicks into the input field and types the message.
+    Handles multiline input using Shift+Enter for `\n`.
+    Falls back to paste if the message is large.
+    """
     locator.click()
     time.sleep(0.1)
 
     try:
-        if len(text) <= 50:
-            page.keyboard.type(text, delay=random.uniform(0.82, 1.3))
-        else:
-            pyperclip.copy(text)
-            page.keyboard.press("Control+V")
-            time.sleep(0.15)
+        lines = text.split("\n")
 
-        page.keyboard.press("Enter")
+        # If short text with no newline, type normally
+        if len(text) <= 50 and len(lines) == 1:
+            page.keyboard.type(text, delay=random.randint(76, 98))
+        else:
+            for i, line in enumerate(lines):
+                if len(line) > 100:
+                    pyperclip.copy(line)
+                    page.keyboard.press("Control+V")
+                else:
+                    page.keyboard.type(line, delay=random.randint(47, 98))
+
+                if i < len(lines) - 1:
+                    page.keyboard.press("Shift+Enter")
+
 
     except Exception as e:
         print(f"[Fallback Fill] Failed to send: {e}")
@@ -81,5 +94,5 @@ def human_send(page: Page, locator: Locator, text: str):
             locator.fill(text)
             page.keyboard.press("Enter")
         except:
-            pass
-
+            page.keyboard.press("Escape", delay=0.5)
+            page.keyboard.press("Escape", delay=0.5)

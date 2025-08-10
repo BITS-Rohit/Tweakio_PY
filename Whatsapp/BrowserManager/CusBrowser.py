@@ -13,7 +13,6 @@ from Whatsapp import SETTINGS, pre_dir
 
 # -----------------------------------------------------------------------------------------------------------------------
 traces_dir = pre_dir.TraceStart()
-
 # -----------------------------------------------------------------------------------------------------------------------
 
 class CusBrowser:
@@ -66,7 +65,6 @@ class CusBrowser:
             timeout=SETTINGS.BROWSER_INIT_TIMEOUT,
             traces_dir=traces_dir,
             args=[
-                "--no-sandbox",
                 # "--disable-setuid-sandbox",  use only when running inside docker or GitHub runner as root else avoid.
                 "--disable-infobars",
                 "--window-size=1280,800",
@@ -118,4 +116,3 @@ class CusBrowser:
 def getInstance():
     return CusBrowser()
 
-# PYTHONUNBUFFERED=1;PROFILE=tweakio;BOT_NUMBER=32 782 69577;BOT_NUM_COUNTRY=pakistan;ADMIN_NUMBER=7678686855

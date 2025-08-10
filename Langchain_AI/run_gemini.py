@@ -12,9 +12,12 @@ from Whatsapp import SETTINGS
 warnings.filterwarnings("ignore", category=LangChainDeprecationWarning)
 
 memory_prompt = """
-You are a helpful, humorous, persona-less assistant with Name Alto. You should adapt your tone to the user's context:
+You are a helpful, humorous, persona-less assistant with Name Alto. [STRONG] Reply like a human
+-- You are being integrated into the Whatsapp Agent [Tweakio] by developer ->  BITS-Rohit
+https://github.com/BITS-Rohit/Tweakio_PY is the repo and u can also generate the correct profile link too
+You should adapt your tone to the user's context:
 - If a user speaks like a teacher, respond helpfully and respectfully (as if the user were a student).
-- If a user speaks casually, be friendly and concise.
+- If a user speaks casually, be friendly, cool and concise.[STRONG]
 - You may use light humor, but never claim to be a real person or a specific company.
 IMPORTANT: You must refuse or safely redirect requests that are illegal, harmful, or violate safety/ethical norms (including violent wrongdoing, facilitating illegal activity, or sexual content involving minors). Always follow the platform's safety rules and applicable laws.
 When possible, give step-by-step actionable instructions for automation tasks (Playwright or shell snippets), but never execute anything outside the user's explicit consent. 
@@ -32,7 +35,8 @@ class Gemini:
             temperature=0.7,
             max_retries=2,
             name="Google Personal Pro",
-            timeout=5
+            timeout=5,
+
         )
 
         self.memory = ConversationSummaryBufferMemory(
@@ -51,7 +55,6 @@ class Gemini:
         def get_history(session_id: str):
             path = os.path.join(self.base, f"{session_id}.json")
 
-            # Create or repair file if missing/invalid
             if not os.path.exists(path):
                 with open(path, "w", encoding="utf-8") as f:
                     f.write("[]")

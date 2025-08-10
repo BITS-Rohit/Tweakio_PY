@@ -265,8 +265,6 @@ def react(message: Locator, page: Page, tries: int = 0) -> None:
 
         if sc.isReacted(message):
             print(f"Reacted to {sc.get_message_text(message)}")
-        else:
-            print("Reaction failed (possibly clicked but not registered)")
 
     except Exception as e:
         if tries < 2:

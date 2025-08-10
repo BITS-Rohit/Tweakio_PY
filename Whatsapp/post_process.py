@@ -65,14 +65,14 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
             helper.ai(page=page, message=message,ask=f_info)
         case "inject":
             text = "`--[Here is your file]--`"
-            rep.reply_media(page=page, mediatype="doc", message=message, sendMedType="inject",
-                            file=[f"{pd.files}/test.mp3"], text=text)
+            rep.reply_media(page=page, mediatype="doc", message=message, send_type="inject",
+                            file=[f"{pd.files}/test.mp4"], text=text)
         case "send":
             text = "`--[Here is your file]--`"
-            # rep.reply_(page=page, locator=message, text=f"`{text}`")
-            # med.AddMedia(page,file=f"{pd.files}/test.jpg",mediatype="image")
-            rep.reply_media(page=page, mediatype="image", message=message,file=[f"{pd.files}/test.jpg"], text=text,sendMedType="add")
-            rep.reply_media(page=page, mediatype="audio", message=message,file=[f"{pd.files}/test.mp3"], text=text,sendMedType="add")
+            rep.reply_media(page=page, mediatype="image", message=message, file=[f"{pd.files}/test.jpg"], text=text,
+                            send_type="add")
+            # rep.reply_media(page=page, mediatype="audio", message=message, file=[f"{pd.files}/test.mp3"], text=text,
+            #                 send_type="add")
 
         case _:
             print(text)

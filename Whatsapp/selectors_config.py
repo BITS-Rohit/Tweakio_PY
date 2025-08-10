@@ -181,37 +181,37 @@ def plus_rounded_icon(page: 'Page') -> 'Locator':
 
 def document(page: 'Page') -> 'Locator':
     """Safely locates the 'Document' upload option in the menu"""
-    return page.get_by_role("button", name="Document")
+    return page.get_by_role("button", name="Document").first
 
 
 def photos_videos(page: 'Page') -> 'Locator':
     """Safely locates the 'Photos & videos' upload option in the menu"""
-    return page.get_by_role("button", name="Photos & videos")
+    return page.get_by_role("button", name="Photos & videos").first
 
 
 def camera(page: 'Page') -> 'Locator':
     """Safely locates the 'Camera' upload option in the menu"""
-    return page.get_by_role("button", name="Camera")
+    return page.get_by_role("button", name="Camera").first
 
 
 def audio(page: 'Page') -> 'Locator':
     """Safely locates the 'Audio' upload option in the menu"""
-    return page.get_by_role("button", name="Audio")
+    return page.get_by_role("button", name="Audio").first
 
 
 def contact(page: 'Page') -> 'Locator':
     """Safely locates the 'Contact' upload option in the menu"""
-    return page.get_by_role("button", name="Contact")
+    return page.get_by_role("button", name="Contact").first
 
 
 def poll(page: 'Page') -> 'Locator':
     """Safely locates the 'Poll' upload option in the menu"""
-    return page.get_by_role("button", name="Poll")
+    return page.get_by_role("button", name="Poll").first
 
 
 def event(page: 'Page') -> 'Locator':
     """Safely locates the 'Event' upload option in the menu"""
-    return page.get_by_role("button", name="Event")
+    return page.get_by_role("button", name="Event").first
 
 
 def new_sticker(page: 'Page') -> 'Locator':
@@ -240,7 +240,7 @@ def isVideo(message: 'Locator') -> 'Locator':
 
 def isReacted(message: 'Locator') -> bool:
     """check is the message is reacted or not"""
-    return message.get_by_role("button", name=re.compile("reaction 👍", re.I), exact=True).is_visible()
+    return message.get_by_role("button", name=re.compile("reaction 👍", re.I), exact=True).first.is_visible()
 
 
 def is_Voice_Message(message: 'Locator') -> 'Locator':

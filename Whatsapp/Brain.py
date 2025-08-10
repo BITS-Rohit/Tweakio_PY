@@ -1,4 +1,5 @@
 import random
+import re
 import time
 from datetime import datetime
 
@@ -7,10 +8,9 @@ from playwright.sync_api import Locator, Page
 from Whatsapp import SETTINGS, selectors_config as sc, Extra as ex, HumanAction as ha, ___ as _, Methods as helper, \
     Reply as rep, post_process as process, pre_dir as pwd
 from Whatsapp.BrowserManager import CusBrowser
-from Whatsapp.SETTINGS import BOT_NUMBER
 
 # ----------------------------------------------------------------------------------------------------------------------
-debug = SETTINGS.DEBUG
+debug = True
 refreshTime = SETTINGS.REFRESH_TIME
 browser = CusBrowser.getInstance()
 admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
@@ -64,7 +64,7 @@ def Start_Handling(p: Page) -> None:
                 chat = chats.nth(i)
                 _check_messages(chat, y)
                 y += 1
-                time.sleep(random.uniform(1.0, 2.0))
+                time.sleep(random.uniform(0.87, 1.98))
 
     except Exception as e:
         print(f"Handle chats error: {e}")
@@ -82,39 +82,62 @@ def _check_messages(chat: Locator, y: int) -> None:
             if unread == 0:
                 print(f"-- --  Skipping Top chat [no - {y}] with name - {name} -- -- {Time()}")
                 return
-        else:
-            print(f"Personal Chat checking. [{name}]")
 
         print(f"Opening Top chat [no - {y}] with name -  {name} ")
         ha.move_mouse_to_locator(page, chat)
         print("--Top chat has new messages--")
         chat.click()
+        try :
+            print("<><><><><><><><><><><><><><>")
+            messages = sc.messages(page)
+            # messages.first.wait_for(state="visible", timeout=2000)
+            if messages.count() == 0:
+                raise Exception("No messages found in opened chat.")
 
-        messages = sc.messages(page)
-        print(f"Total messages fetched : {messages.count()}")
+            last_ID = sc.get_dataID(messages.nth(messages.count() - 1))
+            if not last_ID:
+                raise Exception("Data ID is not correct in last message // Brain//check messages")
 
-        for i in range(messages.count()):
+            while True:
+                print(f"Total messages fetched : {messages.count()}")
 
-            message = messages.nth(i)
-            text = sc.get_message_text(message).strip()
+                for i in range(messages.count()):
+                    message = messages.nth(i)
+                    text = sc.get_message_text(message).strip()
 
-            # Only text with cmds there or not checking
-            if not text or text.split(" ")[0].lower() not in admin_cmds: continue
-            _auth_handle(message=message, text=text, chat=chat)
+                    if not text or text.split(" ")[0].lower() not in admin_cmds:
+                        continue
+                    _auth_handle(message=message, text=text, chat=chat, p_chat=Personal_auth)
 
-        ex.do_unread(page=page, chat=chat)
+                # Check for live messages
+                messages = sc.messages(page)
+                # messages.first.wait_for(state="visible", timeout=2000)
+                current_last_id = sc.get_dataID(messages.nth(messages.count() - 1))
+
+                if not current_last_id:
+                    raise Exception("Data ID is not correct in last message // Brain//check messages")
+
+                if current_last_id == last_ID:
+                    break  # No new messages
+                last_ID = current_last_id
+
+            print("<><><><><><><><><><><><><><>")
+
+            # Safely we can skip for personal chat
+            # & it will fix the UI bug for other chat to keep opened and when new  message it process but still
+            # that new message icon dont fade away , with this we are always coming to center chat.
+            if not Personal_auth: ex.do_unread(page=page, chat=chat)
+        except Exception as e:
+            print(f"Error in live messages loop // check messages : {e}")
+
     except Exception as e:
         print(f"Error in check messages : {e}")
 
 
-def _auth_handle(message: Locator, text: str, chat: Locator) -> None:
+def _auth_handle(message: Locator, text: str, chat: Locator, p_chat: bool = False) -> None:
     try:
         t = text.split(" ", 1)[0].lower().strip()
         print("Message : " + text)
-
-        if _.ban_list is None: print("None banlist")
-        if admin_cmds is None: print("None admin cmds ")
-        if user_cmds is None: print("None user cmds")
 
         data_id = sc.get_dataID(message)
 
@@ -123,7 +146,7 @@ def _auth_handle(message: Locator, text: str, chat: Locator) -> None:
             return
 
         if data_id in _.seen_ids:
-            print("[Seen ID containing message]")
+            print("[Seen ID]")
             return
 
         name = sc.getChatName(chat)
@@ -136,14 +159,18 @@ def _auth_handle(message: Locator, text: str, chat: Locator) -> None:
         def authChecks():
             nonlocal user_auth, Admin_AUTH, sender
             try:
-                user_auth = SETTINGS.GLOBAL_MODE or mess_out or PersonalChatCheck(chat)
+                user_auth = SETTINGS.GLOBAL_MODE or mess_out
                 sender_raw = ex.getSenderID(message)
                 sender = (sender_raw or "").replace(" ", "").replace("+", "")
-                Admin_AUTH = sender in _.admin_list or mess_out or PersonalChatCheck(chat)
+                Admin_AUTH = sender in _.admin_list or mess_out
             except Exception as e:
                 print(f"Error in user_auth checks : {e}")
 
-        authChecks()
+        if p_chat:
+            user_auth = Admin_AUTH = True
+            sender = SETTINGS.BOT_NUMBER
+        else:
+            authChecks()
 
         print(f"Prefix : {t}")
 
@@ -156,16 +183,24 @@ def _auth_handle(message: Locator, text: str, chat: Locator) -> None:
         def Ban_Handle():
             nonlocal check
             GID = ex.getGroudID(message)
+            if p_chat :GID = "personal Chat"
             if Admin_AUTH and t in ["--ban--", "--unban--"]:
                 if not GID:
                     print("Error: Chat name is empty during ban/unban check.")
+                    return
+
+                if p_chat:
+                    """  No Banning allowed in personal chat """
+                    helper.react(message=message, page=page)
+                    rep.reply(page=page, locator=message, text="`You can't ban/unban personal chat`")
+                    check = True
                     return
 
                 if t == "--unban--":
                     if GID in _.ban_list:
                         helper.react(page=page, message=message)
                         _.ban_list.remove(GID)
-                        _.ban_change = True  # marking for change that something is changed in list
+                        _.ban_change = True  # change marked
                         print(f"✅ Unbanned chat: {name}")
                         rep.reply(page=page, locator=message, text=f"✅ Unbanned chat: {name}")
                         check = True
@@ -206,11 +241,11 @@ def _auth_handle(message: Locator, text: str, chat: Locator) -> None:
         text = text.lower()
 
         def cmd_exec():
-            if user_auth and t in user_cmds:
-                _process_cmd(message=message, text=text)
-
-            elif Admin_AUTH and t in admin_cmds + user_cmds:
+            if Admin_AUTH and t in admin_cmds + user_cmds:
                 _Admin_Process(message=message, fun_name=text)
+
+            elif user_auth and t in user_cmds:
+                _process_cmd(message=message, text=text)
 
             else:
                 print(f"Unauthorized command '{t}' from {sender}")
@@ -313,7 +348,8 @@ def PersonalChatCheck(chat: Locator) -> bool:
             message = messages.nth(0)  # Any message can define the authentication
 
             num = ex.getJID_mess(message).replace("@c.us", "")
-            print(f"NUMBER : [{num}]")
+            BOT_NUMBER = re.sub(r"\D", "", SETTINGS.BOT_NUMBER)
+            print(f"NUMBER : [{num}] - [{BOT_NUMBER in num} - {BOT_NUMBER}]")
             return BOT_NUMBER in num  # Authorisation complete .
 
         elif debug:

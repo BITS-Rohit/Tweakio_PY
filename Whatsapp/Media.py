@@ -1,4 +1,5 @@
 """Media Methods"""
+import base64
 import random
 import time
 from pathlib import Path
@@ -55,6 +56,8 @@ def menu_icon_click(page: Page):
         time.sleep(random.uniform(1.0, 1.5))
     except Exception as e:
         print(f"Menu Icon not found : {e}")
+        page.keyboard.press("Escape",delay=0.5)
+        page.keyboard.press("Escape",delay=0.5)
 
 
 def InjectMedia(page: Page, files: list[str], mediatype: str = "doc") -> None:
@@ -66,17 +69,22 @@ def InjectMedia(page: Page, files: list[str], mediatype: str = "doc") -> None:
     :return:None
     """
 
-    menu_icon_click(page)
-    media_input = getMediaInputLocator(page, mediatype)
-    if not media_input:
-        print(f"❌ Media type button not visible for: {mediatype}")
-        return
+    try :
+        menu_icon_click(page)
+        media_input = getMediaInputLocator(page, mediatype)
+        if not media_input:
+            print(f"❌ Media type button not visible for: {mediatype}")
+            return
 
-    if not media_input:
-        print(f"Media input for type [ {mediatype} ] not found")
-        return
+        if not media_input:
+            print(f"Media input for type [ {mediatype} ] not found")
+            return
 
-    media_input.set_input_files(files)
+        media_input.set_input_files(files)
+    except Exception as e:
+        print(f" Error occurred in InjectMedia : {e}")
+        page.keyboard.press("Escape",delay=0.5)
+        page.keyboard.press("Escape",delay=0.5)
 
 
 def AddMedia(page: Page, file: str, mediatype: str = "doc") -> None:
@@ -104,18 +112,12 @@ def AddMedia(page: Page, file: str, mediatype: str = "doc") -> None:
         if not p.exists():
             print(f"❌ File not found: {file}")
             return
+
         chooser.set_files(str(p.resolve()))
+
         print(f"✅ Sent {mediatype}: {file}")
 
     except Exception as e:
         print(f"Error in AddMedia: {e}")
-
-#
-# def sendMedia(page: Page, files: list[str], mediatype: str = "doc") -> None:
-#     try:
-#         InjectMedia(page=page, files=files, mediatype=mediatype)
-#         page.keyboard.press("Enter")
-#     except Exception as e:
-#         print(f"Error in Add Media : {e}")
-#         page.keyboard.press("Escape", delay=random.uniform(0.2, 0.5))
-#         page.keyboard.press("Escape", delay=random.uniform(0.1, 0.3))
+        page.keyboard.press("Escape",delay=0.5)
+        page.keyboard.press("Escape",delay=0.5)

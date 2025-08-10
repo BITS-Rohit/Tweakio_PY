@@ -10,35 +10,62 @@ def stealth(page: Page) -> None:
     s = Stealth()
     s.apply_stealth_sync(page)
     page.add_init_script(_custom_js_spoof_payload())
-    page.add_init_script(Mouse_UI)
+    page.add_init_script(Fancy_Mouse_UI)
     print("[[Stealth scripts and Mouse UI injected]]")
     print("----------------------------------------------------------")
 
 
-Mouse_UI = """
+Fancy_Mouse_UI = """
 window.addEventListener('DOMContentLoaded', () => {
   const dot = document.createElement('div');
   dot.id = '__mouse_dot__';
   Object.assign(dot.style, {
     position: 'fixed',
-    width: '10px',
-    height: '10px',
-    borderRadius: '65%',
-    backgroundColor: 'black',
-    zIndex: '2147483647',  // Max z-index
+    width: '14px',
+    height: '14px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle at 30% 30%, #ff6ec4, #7873f5)',
+    boxShadow: '0 0 12px rgba(255, 110, 196, 0.8), 0 0 24px rgba(120, 115, 245, 0.6)',
+    zIndex: '2147483647',
     pointerEvents: 'none',
     top: '0px',
     left: '0px',
     transform: 'translate(-50%, -50%)',
-    transition: 'top 0.03s linear, left 0.03s linear'
+    transition: 'transform 0.12s ease-out',
+    willChange: 'transform, top, left'
   });
+
   document.body.appendChild(dot);
+
+  let mouseX = 0, mouseY = 0;
+  let currentX = 0, currentY = 0;
+
+  // Smooth animation loop
+  function animate() {
+    currentX += (mouseX - currentX) * 0.25;
+    currentY += (mouseY - currentY) * 0.25;
+    dot.style.left = `${currentX}px`;
+    dot.style.top = `${currentY}px`;
+    requestAnimationFrame(animate);
+  }
+
   window.addEventListener('mousemove', e => {
-    dot.style.left = `${e.clientX}px`;
-    dot.style.top = `${e.clientY}px`;
+    mouseX = e.clientX;
+    mouseY = e.clientY;
   });
+
+  // Click bounce effect
+  window.addEventListener('mousedown', () => {
+    dot.style.transform = 'translate(-50%, -50%) scale(1.5)';
+  });
+  window.addEventListener('mouseup', () => {
+    dot.style.transform = 'translate(-50%, -50%) scale(1)';
+  });
+
+  animate();
 });
 """
+
 
 def _custom_js_spoof_payload():
     """
