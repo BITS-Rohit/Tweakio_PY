@@ -19,15 +19,16 @@ pool = [
     "detect",
     "send",
     "inject",
-    "ai"
+    "ai",
+    "audio"
 ]
 
 
 def post_process(page: Page, message: Locator, f_name: str, f_info: str):
     text = f"Unknown command: [{f_name}]"
-    if f_name in pool:
-        helper.react(message=message, page=page)
-    else:
+    helper.react(message=message, page=page)
+
+    if f_name not in pool:
         print(text)
         rep.reply(page=page, locator=message, text=f"`{text}`" + f"`Re-try with right cmd in the pool.` \n `[{pool}]`")
 
@@ -62,7 +63,7 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
         case "detect":
             helper.detect(message=message, page=page)
         case "ai":
-            helper.ai(page=page, message=message,ask=f_info)
+            helper.ai(page=page, message=message, ask=f_info)
         case "inject":
             text = "`--[Here is your file]--`"
             rep.reply_media(page=page, mediatype="doc", message=message, send_type="inject",
@@ -71,8 +72,9 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
             text = "`--[Here is your file]--`"
             rep.reply_media(page=page, mediatype="image", message=message, file=[f"{pd.files}/test.jpg"], text=text,
                             send_type="add")
-            # rep.reply_media(page=page, mediatype="audio", message=message, file=[f"{pd.files}/test.mp3"], text=text,
-            #                 send_type="add")
+        case "audio":
+            rep.reply_media(page=page, mediatype="audio", message=message, file=[f"{pd.files}/test.mp3"], text="",
+                            send_type="add")
 
         case _:
             print(text)

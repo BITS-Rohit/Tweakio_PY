@@ -13,9 +13,6 @@ from Whatsapp.BrowserManager import CusBrowser
 debug = True
 refreshTime = SETTINGS.REFRESH_TIME
 browser = CusBrowser.getInstance()
-admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
-              SETTINGS.NLP, SETTINGS.QUANTIFIER, "--ban--", "--unban--"]
-user_cmds = [SETTINGS.NLP, SETTINGS.QUANTIFIER, "showq", "...help"]
 pause_mode = False
 page = None
 
@@ -35,7 +32,7 @@ def Start_Handling(p: Page) -> None:
 
     try:
         try:
-            # ex.MessageToChat(page)
+            ex.MessageToChat(page)
             print("-- Message to owner done --")
         except Exception as e:
             print(f"Error in message to chat : {e}")
@@ -71,6 +68,9 @@ def Start_Handling(p: Page) -> None:
 
 
 def _check_messages(chat: Locator, y: int) -> None:
+    admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
+                  SETTINGS.NLP, SETTINGS.QUANTIFIER, "--ban--", "--unban--"]
+    user_cmds = [SETTINGS.NLP, SETTINGS.QUANTIFIER, "showq", "...help"]
     try:
         name = sc.getChatName(chat)
         if name == "":
@@ -125,7 +125,7 @@ def _check_messages(chat: Locator, y: int) -> None:
 
             # Safely we can skip for personal chat
             # & it will fix the UI bug for other chat to keep opened and when new  message it process but still
-            # that new message icon dont fade away , with this we are always coming to center chat.
+            # that new message icon don't fade away , with this we are always coming to center chat.
             if not Personal_auth: ex.do_unread(page=page, chat=chat)
         except Exception as e:
             print(f"Error in live messages loop // check messages : {e}")
@@ -156,8 +156,10 @@ def _auth_handle(message: Locator, text: str, chat: Locator, p_chat: bool = Fals
         # --- Auth Checks ---
         user_auth, Admin_AUTH, sender = False, False, ""
 
-        def authChecks():
-            nonlocal user_auth, Admin_AUTH, sender
+        if p_chat:
+            user_auth = Admin_AUTH = True
+            sender = SETTINGS.BOT_NUMBER
+        else:
             try:
                 user_auth = SETTINGS.GLOBAL_MODE or mess_out
                 sender_raw = ex.getSenderID(message)
@@ -165,12 +167,6 @@ def _auth_handle(message: Locator, text: str, chat: Locator, p_chat: bool = Fals
                 Admin_AUTH = sender in _.admin_list or mess_out
             except Exception as e:
                 print(f"Error in user_auth checks : {e}")
-
-        if p_chat:
-            user_auth = Admin_AUTH = True
-            sender = SETTINGS.BOT_NUMBER
-        else:
-            authChecks()
 
         print(f"Prefix : {t}")
 
@@ -182,7 +178,7 @@ def _auth_handle(message: Locator, text: str, chat: Locator, p_chat: bool = Fals
 
         def Ban_Handle():
             nonlocal check
-            GID = ex.getGroudID(message)
+            GID = ex.getGID_CID(message)
             if p_chat :GID = "personal Chat"
             if Admin_AUTH and t in ["--ban--", "--unban--"]:
                 if not GID:
@@ -201,7 +197,7 @@ def _auth_handle(message: Locator, text: str, chat: Locator, p_chat: bool = Fals
                         helper.react(page=page, message=message)
                         _.ban_list.remove(GID)
                         _.ban_change = True  # change marked
-                        print(f"✅ Unbanned chat: {name}")
+                        print(f"`✅ Unbanned chat: [{name}]`")
                         rep.reply(page=page, locator=message, text=f"✅ Unbanned chat: {name}")
                         check = True
                     else:
@@ -241,6 +237,10 @@ def _auth_handle(message: Locator, text: str, chat: Locator, p_chat: bool = Fals
         text = text.lower()
 
         def cmd_exec():
+            admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
+                          SETTINGS.NLP, SETTINGS.QUANTIFIER, "--ban--", "--unban--"]
+            user_cmds = [SETTINGS.NLP, SETTINGS.QUANTIFIER, "showq", "...help"]
+
             if Admin_AUTH and t in admin_cmds + user_cmds:
                 _Admin_Process(message=message, fun_name=text)
 

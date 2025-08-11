@@ -86,12 +86,20 @@ def getSenderID(message: Locator) -> str:
         return ""
 
 
-def getGroudID(message: Locator) -> str:
-    raw = sc.get_dataID(message)
-    if "@g.us" in raw:
-        return raw.split("_", 2)[1]
-    else:
-        return ""
+def getGID_CID(message: Locator) -> str:
+    """Gives Group ID for groups and Chat ID for single chats"""
+    try :
+        raw = sc.get_dataID(message)
+        print(f"raw : {raw}")
+        if "g.cus" not in raw and "@c.us" in raw:
+            return raw.split("_")[1]
+        elif "@g.us" in raw:
+            return raw.split("_", 2)[1]
+        else:
+            return ""
+    except Exception as e:
+        print("Error in GID_CID")
+
 
 
 def getDirection(message: Locator) -> str:
