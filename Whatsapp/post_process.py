@@ -23,7 +23,6 @@ pool = [
     "audio"
 ]
 
-
 def post_process(page: Page, message: Locator, f_name: str, f_info: str):
     text = f"Unknown command: [{f_name}]"
     helper.react(message=message, page=page)
