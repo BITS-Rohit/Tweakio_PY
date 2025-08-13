@@ -18,6 +18,7 @@ preferred_login_method = SETTINGS.LOGIN_METHOD
 def login(page: Page, browser) -> bool:
     #  Navigate & sanity check
     page.goto("https://web.whatsapp.com/", timeout=60_000)
+    # page.evaluate("document.body.style.zoom = '80%'") For zoom out we can do this.
     page.wait_for_load_state("networkidle", timeout=50_000)
     if not page.url.startswith("https://web.whatsapp.com/"):
         print("❌ WhatsApp Web did not load")
@@ -137,7 +138,8 @@ def _code_login(page: Page, browser) -> bool:
 
     #  Final wait for chats
     try:
-        sc.chat_list(page).wait_for(timeout=60_000, state="visible")
+        print("Waiting 3 mins for chat load")
+        sc.chat_list(page).wait_for(timeout=180_000, state="visible")
         print("✅ Chats loaded via code login")
         browser.context.storage_state(path=browser.storage_state)
         return True

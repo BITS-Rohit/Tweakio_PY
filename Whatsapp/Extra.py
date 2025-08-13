@@ -2,11 +2,10 @@ import datetime
 import pathlib as pa
 import pickle
 import random
-import re
 import shutil
 import time
 
-from playwright.sync_api import Page, Locator
+from playwright.sync_api import Page, Locator, ElementHandle
 
 from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd, ___ as _
 
@@ -19,7 +18,7 @@ def MessageToChat(page: Page) -> None:
         return
     else:
         print("search box seen")
-    ha.move_mouse_to_locator(page, sbox)
+    ha.move_mouse_to_locator(page, sbox.element_handle())
     sbox.click()
     sbox.fill("")
     sbox.fill("7678686855")
@@ -35,7 +34,7 @@ def MessageToChat(page: Page) -> None:
 
     mess = sc.message_box(page)
     if mess is None:
-        print("messages locator failed in message to owner")
+        print("messages locator is Emptyr")
         return
 
     ha.move_mouse_to_locator(page, mess)
@@ -49,8 +48,8 @@ def MessageToChat(page: Page) -> None:
     print("Messaged: Logged in, Success.Tweakio: Hi ! \n Messaging Done.")
 
 
-def getJID_mess(message: Locator) -> str:
-    """Returns the JID of the message  like : 7678xxxxxx@c.us"""
+def getJID_mess(message: 'ElementHandle') -> str:
+    """Returns the JID of the message like: 7678xxxxxx@c.us"""
     data_id = sc.get_dataID(message)
     if not data_id or "_" not in data_id:
         return ""
@@ -58,15 +57,18 @@ def getJID_mess(message: Locator) -> str:
     return parts[1] if len(parts) > 1 else ""
 
 
-def getSenderID(message: Locator) -> str:
+def getSenderID(message: 'ElementHandle') -> str:
     """
-    Returns the name if it does not have a sender else returns the number of senders
+    Returns the name if it does not have a sender else returns the number of senders.
     """
     raw = sc.get_dataID(message)
 
     def getfromlid() -> str:
         try:
-            attr = message.locator("div.copyable-text[data-pre-plain-text]").get_attribute("data-pre-plain-text")
+            div = message.query_selector("div.copyable-text[data-pre-plain-text]")
+            if not div:
+                return ""
+            attr = div.get_attribute("data-pre-plain-text")
             if not attr or "]" not in attr:
                 print("[data-pre-plain-text] Content is not properly formatted.")
                 return ""
@@ -86,9 +88,9 @@ def getSenderID(message: Locator) -> str:
         return ""
 
 
-def getGID_CID(message: Locator) -> str:
+def getGID_CID(message: 'ElementHandle') -> str:
     """Gives Group ID for groups and Chat ID for single chats"""
-    try :
+    try:
         raw = sc.get_dataID(message)
         print(f"raw : {raw}")
         if "g.cus" not in raw and "@c.us" in raw:
@@ -98,45 +100,80 @@ def getGID_CID(message: Locator) -> str:
         else:
             return ""
     except Exception as e:
-        print("Error in GID_CID")
+        print(f"Error in GID_CID : [{e}]")
+        return ""
 
 
-
-def getDirection(message: Locator) -> str:
-    """Returns a direction [out: bot | in: other] showcasing the message from the bot number or from another number"""
+def getDirection(message: 'ElementHandle') -> str:
+    """Returns a direction [out: bot | in: other] showcasing the message from the bot number or from another number."""
     return "out" if sc.is_message_out(message) else "in"
 
 
-def get_mess_type(message: Locator) -> str:
-    """Returns the specific type of message : image , video, audio, gif, sticker, quoted, text"""
-    if sc.isPic(message).is_visible():
-        return "image"
-    elif sc.isVideo(message).is_visible():
-        return "video"
-    elif sc.is_Voice_Message(message).is_visible():
-        return "audio"
-    elif sc.is_gif(message).is_visible():
-        return "gif"
-    elif sc.isSticker(message):
-        return "sticker"
-    elif sc.isQuotedText(message).is_visible():
-        return "quoted"
-    else:
+def get_mess_type(message: ElementHandle) -> str:
+    """Returns the specific type of message: image, video, audio, gif, sticker, quoted, text"""
+    try:
+        try:
+            if sc.pic_handle(message) :
+                return "image"
+        except Exception as e:
+            print(f"Error checking image: {e}")
+
+        try:
+            if sc.isVideo(message):
+                return "video"
+        except Exception as e:
+            print(f"Error checking video: {e}")
+
+        try:
+            if sc.is_Voice_Message(message):
+                return "audio"
+        except Exception as e:
+            print(f"Error checking audio: {e}")
+
+        try:
+            if sc.is_gif(message):
+                return "gif"
+        except Exception as e:
+            print(f"Error checking gif: {e}")
+
+        try:
+            if sc.isSticker(message):
+                return "sticker"
+        except Exception as e:
+            print(f"Error checking sticker: {e}")
+
+        try:
+            if sc.isQuotedText(message).is_visible():
+                return "quoted"
+        except Exception as e:
+            print(f"Error checking quoted text: {e}")
+
+        # Default
         return "text"
 
-
-def get_Timestamp(message: Locator) -> str:
-    """Returns TimeStamp of the WhatsApp stored Time of the message"""
-    element = message.locator("div[data-pre-plain-text]").first
-    if element:
-        data = element.get_attribute("data-pre-plain-text")
-        if data:
-            # WhatsApp format: [4:25 PM, 7/26/2025] Time: Sender
-            return data.split("]")[0].strip("[")  # Extract "4:25 PM, 7/26/2025"
-    return ""
+    except Exception as e:
+        print(f"Unexpected error in get_mess_type: {e}")
+        return "unknown"
 
 
-def trace_message(seen_messages: dict, chat: Locator, message: Locator) -> None:
+
+def get_Timestamp(message: 'ElementHandle') -> str:
+    """Returns TimeStamp of the WhatsApp stored Time of the message."""
+    try:
+        element = message.query_selector("div[data-pre-plain-text]")
+        if element:
+            data = element.get_attribute("data-pre-plain-text")
+            if data:
+                # WhatsApp format: [4:25 PM, 7/26/2025] Time: Sender
+                return data.split("]")[0].strip("[")
+        return ""
+    except Exception as e:
+        print(f"Error in get_Timestamp : [{e}]")
+        return ""
+
+
+def trace_message(seen_messages: dict, chat: 'ElementHandle', message: 'ElementHandle') -> None:
+    """Tracks a unique message and stores its details if not already seen."""
     try:
         data_id = sc.get_dataID(message)
         if data_id in seen_messages:
@@ -232,51 +269,60 @@ def pick_adminList() -> list:
 
 
 # --- ---- Unread Handle ---- ---
-def is_unread(chat: Locator) -> int:
-    """Return 1 if the chat has actual unread messages (with a count),
-    else 0 if only marked as unread manually (e.g., no numeric badge)."""
+def is_unread(chat: 'ElementHandle') -> int:
+    """
+    Return 1 if the chat has actual unread messages (with a numeric count),
+    else 0 if only marked as unread manually (no numeric badge).
+    """
     try:
-        unread_badge = chat.locator("[aria-label*='unread']")
-        if unread_badge.is_visible():
-            # Look for a number
-            number_span = unread_badge.locator("span").first
-            text = number_span.inner_text().strip()
-            return 1 if text.isdigit() else 0
+        unread_badge = chat.query_selector("[aria-label*='unread']")
+        if unread_badge:
+            number_span = unread_badge.query_selector("span")
+            if number_span:
+                text = number_span.inner_text().strip()
+                return 1 if text.isdigit() else 0
         return 0
-    except:
+    except Exception as e:
+        print(f"[is_unread] Error: {e}")
         return 0
 
 
-def do_unread(page: Page, chat: Locator) -> None:
-    """Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'."""
+def do_unread(page: Page, chat: 'ElementHandle') -> None:
+    """
+    Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'.
+    """
     try:
         ha.move_mouse_to_locator(page, chat)
         chat.click(button="right")
         time.sleep(random.uniform(1.5, 2.5))
 
-        unread_option = page.get_by_role("application").locator("li span").get_by_text(
-            re.compile("mark as unread", re.I))
+        app_menu = page.query_selector("role=application")  # top-level menu
+        if not app_menu:
+            raise Exception("Application menu not found")
 
-        if unread_option.is_visible():
+        unread_option = app_menu.query_selector("li span:text-matches('mark as unread', 'i')")
+        if unread_option:
             ha.move_mouse_to_locator(page, unread_option)
             unread_option.click(timeout=2000)
         else:
-            raise Exception("Option 'Mark as unread' not visible or Click error")
+            raise Exception("'Mark as unread' option not found or not visible")
 
     except Exception as e:
         try:
-            read_option = page.get_by_role("application").locator("li span").get_by_text(
-                re.compile("mark as read", re.I))
-            if read_option.is_visible():
+            read_option = page.query_selector("role=application").query_selector(
+                "li span:text-matches('mark as read', 'i')"
+            )
+            if read_option:
                 print(f"Chat is already unread — [{sc.getChatName(chat)}]")
             else:
                 raise
         except:
-            print(f"Error in mark_unread: {e}")
+            print(f"[do_unread] Error marking unread: {e}")
 
         # Reset state by clicking outside (WA icon)
-        ha.move_mouse_to_locator(page, sc.wa_icon(page))
-        sc.wa_icon(page).click()
+        wa_icon = sc.wa_icon(page)
+        ha.move_mouse_to_locator(page, wa_icon)
+        wa_icon.click()
 
 
 def cleanFolder(folder: pa.Path) -> None:
@@ -289,5 +335,3 @@ def cleanFolder(folder: pa.Path) -> None:
                     shutil.rmtree(item)
             except Exception as e:
                 print(f"⚠️ Could not delete {item}: {e}")
-
-

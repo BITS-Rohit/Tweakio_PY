@@ -54,6 +54,7 @@ class Gemini:
 
         def get_history(session_id: str):
             path = os.path.join(self.base, f"{session_id}.json")
+            print(f"LLM path : {os.path.abspath(path)}")
 
             if not os.path.exists(path):
                 with open(path, "w", encoding="utf-8") as f:

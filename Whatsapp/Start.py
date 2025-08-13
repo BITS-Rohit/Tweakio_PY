@@ -66,9 +66,8 @@ if __name__ == '__main__':
     # --- Lang Smith ----
     if SETTINGS.LANGCHAIN_API_KEY:
         os.environ["LANGCHAIN_API_KEY"] = SETTINGS.LANGCHAIN_API_KEY
-
-    os.environ["LANGCHAIN_TRACING_V2"] = "true"
-    os.environ["LANGCHAIN_PROJECT"] = SETTINGS.LANGCHAIN_PROJECT
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_PROJECT"] = SETTINGS.LANGCHAIN_PROJECT
 
     # --- --- --- --- ---
 
@@ -84,6 +83,9 @@ if __name__ == '__main__':
                     break
                 except Exception as e:
                     print(f"❗ Retrying new_page: {e}")
+                    print("Clean up Browser remain start--")
+                    shutdown()
+                    print("Clean up Browser remain done----")
                     browser = CusBrowser.getInstance() # Create new instance
                     time.sleep(1)
             else:

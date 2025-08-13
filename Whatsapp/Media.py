@@ -1,5 +1,4 @@
 """Media Methods"""
-import base64
 import random
 import time
 from pathlib import Path
@@ -45,7 +44,7 @@ def getMediaInputLocator(page: Page, mediatype: str) -> Locator:
 
 def menu_icon_click(page: Page):
     try:
-        menu_icon = sc.plus_rounded_icon(page=page)
+        menu_icon = sc.plus_rounded_icon(page=page).element_handle()
 
         if not menu_icon:
             print("Menu Icon not found")
@@ -97,9 +96,7 @@ def AddMedia(page: Page, file: str, mediatype: str = "doc") -> None:
     """
     try:
         menu_icon_click(page)
-
-        target = getMediaOptionLocator(page, mediatype)
-
+        target = getMediaOptionLocator(page, mediatype).element_handle()
         if not target.is_visible():
             print(f"❌ Attach option for '{mediatype}' not visible.")
             return

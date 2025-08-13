@@ -20,7 +20,8 @@ pool = [
     "send",
     "inject",
     "ai",
-    "audio"
+    "audio",
+    "menu"
 ]
 
 def post_process(page: Page, message: Locator, f_name: str, f_info: str):
@@ -60,7 +61,7 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
         case 'saveVid':
             helper.save_video(page=page, message=message)
         case "detect":
-            helper.detect(message=message, page=page)
+            helper.detect(m = f_info, page=page,message=message)
         case "ai":
             helper.ai(page=page, message=message, ask=f_info)
         case "inject":
@@ -74,6 +75,9 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
         case "audio":
             rep.reply_media(page=page, mediatype="audio", message=message, file=[f"{pd.files}/test.mp3"], text="",
                             send_type="add")
+
+        case "menu":
+            rep.reply_menu(page=page,locator=message)
 
         case _:
             print(text)

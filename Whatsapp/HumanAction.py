@@ -3,7 +3,7 @@ import random
 import time
 
 import pyperclip
-from playwright.sync_api import Page, Locator
+from playwright.sync_api import Page, ElementHandle
 
 current_mouse_position = {"x": 0, "y": 0}
 
@@ -29,8 +29,8 @@ def move_mouse_smooth(page, target_x, target_y, steps=50):
     start_x, start_y = current_mouse_position["x"], current_mouse_position["y"]
     distance = _distance(start_x, start_y, target_x, target_y)
 
-    # Adjust duration based on distance (between 0.2 to 0.6 sec)
-    base_speed = 800  # pixels per second (adjust as needed)
+    # Adjust duration based on distance (between 0.4 to 0.9 sec)
+    base_speed = 800  # pixels per second
     duration = max(0.4, min(0.9, distance / base_speed))
 
     for i in range(1, steps + 1):
@@ -53,21 +53,24 @@ def move_mouse_smooth(page, target_x, target_y, steps=50):
     current_mouse_position = {"x": target_x, "y": target_y}
 
 def move_mouse_to_locator(page, locator):
+    """Moves mouse to a random point inside the element handle's bounding box."""
     box = locator.bounding_box()
     if not box:
-        raise Exception("Cannot get bounding box for locator")
+        raise Exception("Cannot get bounding box for element handle")
 
     target_point = _random_point_in_box(box)
     move_mouse_smooth(page, target_point["x"], target_point["y"])
 
 
-def human_send(page: Page, locator: Locator, text: str):
+
+def human_send(page: Page, element: ElementHandle, text: str):
     """
     Clicks into the input field and types the message.
     Handles multiline input using Shift+Enter for `\n`.
     Falls back to paste if the message is large.
+    Works with ElementHandle instead of Locator.
     """
-    locator.click()
+    element.click()
     time.sleep(0.1)
 
     try:
@@ -87,11 +90,10 @@ def human_send(page: Page, locator: Locator, text: str):
                 if i < len(lines) - 1:
                     page.keyboard.press("Shift+Enter")
 
-
     except Exception as e:
         print(f"[Fallback Fill] Failed to send: {e}")
         try:
-            locator.fill(text)
+            element.fill(text)
             page.keyboard.press("Enter")
         except:
             page.keyboard.press("Escape", delay=0.5)
