@@ -9,9 +9,9 @@ def double_edge_click(page: Page, message: ElementHandle) -> bool:
     print("In double edge click")
     try:
         attempts = 0
-        while message.bounding_box() is None and attempts < 10:
+        while message.bounding_box() is None and attempts < 20:
             page.mouse.wheel(0, -random.randint(150, 250))
-            page.wait_for_timeout(200)
+            page.wait_for_timeout(random.randint(768,1302))
             attempts += 1
             print(f"Done scrolling : attempts : {attempts}")
 
