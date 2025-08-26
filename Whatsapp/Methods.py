@@ -6,7 +6,7 @@ from playwright.sync_api import Page, ElementHandle
 
 from Langchain_AI import run_gemini
 from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
-                      HumanAction as ha, selectors_config as sc)
+                      selectors_config as sc)
 from Whatsapp.selectors_config import isReacted
 
 # ----------------
@@ -317,7 +317,7 @@ def react(message: 'ElementHandle', page: Page, tries: int = 0) -> None:
         if not box:
             raise Exception("Message bounding box not found")
 
-        ha.move_mouse_to_locator(page, message)
+        # ha.move_mouse_to_locator(page, message)
         message.hover(timeout=3000)
 
         # Scroll into view
@@ -333,14 +333,14 @@ def react(message: 'ElementHandle', page: Page, tries: int = 0) -> None:
                 print("Max tries reached - couldn't find emoji button")
                 return None
 
-        ha.move_mouse_to_locator(page, emoji_btn)
+        # ha.move_mouse_to_locator(page, emoji_btn)
         emoji_btn.click()
 
         # Emoji dialog
         dialog = page.get_by_role("dialog").get_by_role("button").first
         if not dialog:print("dialog not visible")
         else :
-            ha.move_mouse_to_locator(page, dialog.element_handle())
+            # ha.move_mouse_to_locator(page, dialog.element_handle())
             dialog.click()
 
         time.sleep(random.uniform(1.0, 2.0))

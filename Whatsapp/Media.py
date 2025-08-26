@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 from playwright.sync_api import Page, Locator, FileChooser
-from Whatsapp import HumanAction as ha
+# from Whatsapp import HumanAction as ha
 from Whatsapp import selectors_config as sc
 
 # ----------------------------------------------------------------  #
@@ -50,7 +50,7 @@ def menu_icon_click(page: Page):
             print("Menu Icon not found")
             return
 
-        ha.move_mouse_to_locator(page, menu_icon)
+        # ha.move_mouse_to_locator(page, menu_icon)
         menu_icon.click(timeout=2000)
         time.sleep(random.uniform(1.0, 1.5))
     except Exception as e:

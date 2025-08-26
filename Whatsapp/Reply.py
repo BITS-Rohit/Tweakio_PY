@@ -78,7 +78,7 @@ def reply_(page: Page, message: ElementHandle, text: str, retry: int = 0) -> boo
         double_edge_click(page=page, message=message)
 
         inBox = sc.message_box(page)
-        ha.move_mouse_to_locator(page, inBox.element_handle())
+        # ha.move_mouse_to_locator(page, inBox.element_handle())
         inBox.click()
 
         ha.human_send(page=page, element=inBox.element_handle(), text=text)

@@ -69,7 +69,7 @@ def total_chats(page: 'Page') -> int:
 
 def chat_items(page: 'Page') -> 'Locator':
     """Returns a locator for all individual chat items (buttons) in the list."""
-    return page.get_by_role("listitem").get_by_role("button")
+    return chat_list(page).get_by_role("listitem")
 
 
 def getChat_lowImg(chat: 'ElementHandle') -> str:

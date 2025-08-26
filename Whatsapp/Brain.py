@@ -5,14 +5,12 @@ from datetime import datetime
 
 from playwright.sync_api import Locator, Page, ElementHandle
 
-from Whatsapp import SETTINGS, selectors_config as sc, Extra as ex, HumanAction as ha, ___ as _, Methods as helper, \
+from Whatsapp import SETTINGS, selectors_config as sc, Extra as ex, ___ as _, Methods as helper, \
     Reply as rep, post_process as process, pre_dir as pwd
-from Whatsapp.BrowserManager import CusBrowser
 
 # ----------------------------------------------------------------------------------------------------------------------
 debug = False
 refreshTime = SETTINGS.REFRESH_TIME
-browser = CusBrowser.getInstance()
 pause_mode = False
 page = None
 detect = True
@@ -84,7 +82,7 @@ def _check_messages(chat: ElementHandle, y: int, Locator_chat: Locator) -> None:
                 return
 
         print(f"Opening Top chat [no - {y}] with name -  {name} ")
-        ha.move_mouse_to_locator(page, chat)
+        # ha.move_mouse_to_locator(page, chat)
         print("--Top chat has new messages--")
         chat.click()
         try:
@@ -339,7 +337,7 @@ def PersonalChatCheck(chat: Locator) -> bool:
         you = chat.get_by_role("gridcell").get_by_text("(You)", exact=True)
 
         if you.is_visible():
-            ha.move_mouse_to_locator(page=page, locator=chat.element_handle())
+            # ha.move_mouse_to_locator(page=page, locator=chat.element_handle())
             chat.click()
             messages = sc.messages(page=page)
             message = messages.nth(0).element_handle()  # Any message can define the authentication

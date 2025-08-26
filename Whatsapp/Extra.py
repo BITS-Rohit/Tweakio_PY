@@ -7,7 +7,7 @@ import time
 
 from playwright.sync_api import Page, Locator, ElementHandle
 
-from Whatsapp import selectors_config as sc, HumanAction as ha, pre_dir as pwd, ___ as _
+from Whatsapp import selectors_config as sc, pre_dir as pwd, ___ as _
 
 
 def MessageToChat(page: Page) -> None:
@@ -18,7 +18,7 @@ def MessageToChat(page: Page) -> None:
         return
     else:
         print("search box seen")
-    ha.move_mouse_to_locator(page, sbox.element_handle())
+    # ha.move_mouse_to_locator(page, sbox.element_handle())
     sbox.click()
     sbox.fill("")
     sbox.fill("7678686855")
@@ -37,7 +37,7 @@ def MessageToChat(page: Page) -> None:
         print("messages locator is Emptyr")
         return
 
-    ha.move_mouse_to_locator(page, mess)
+    # ha.move_mouse_to_locator(page, mess)
     mess.click()
     mess.fill("")
     mess.fill("Logged in, Success.Tweakio: Hi !")
@@ -292,7 +292,7 @@ def do_unread(page: Page, chat: 'ElementHandle') -> None:
     Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'.
     """
     try:
-        ha.move_mouse_to_locator(page, chat)
+        # ha.move_mouse_to_locator(page, chat)
         chat.click(button="right")
         time.sleep(random.uniform(1.5, 2.5))
 
@@ -302,7 +302,7 @@ def do_unread(page: Page, chat: 'ElementHandle') -> None:
 
         unread_option = app_menu.query_selector("li span:text-matches('mark as unread', 'i')")
         if unread_option:
-            ha.move_mouse_to_locator(page, unread_option)
+            # ha.move_mouse_to_locator(page, unread_option)
             unread_option.click(timeout=2000)
         else:
             raise Exception("'Mark as unread' option not found or not visible")
@@ -321,7 +321,7 @@ def do_unread(page: Page, chat: 'ElementHandle') -> None:
 
         # Reset state by clicking outside (WA icon)
         wa_icon = sc.wa_icon(page)
-        ha.move_mouse_to_locator(page, wa_icon)
+        # ha.move_mouse_to_locator(page, wa_icon)
         wa_icon.click()
 
 

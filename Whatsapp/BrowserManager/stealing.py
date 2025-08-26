@@ -74,7 +74,7 @@ def _custom_js_spoof_payload():
     """
     return r"""
     (() => {
-        // Removing webdriver 
+        // Removing webdriver
         try {
             delete Object.getPrototypeOf(navigator).webdriver;
         } catch (e) {}
@@ -151,7 +151,7 @@ def _custom_js_spoof_payload():
         Object.defineProperty(window, 'innerHeight', { get: () => 724});
         Object.defineProperty(window, 'outerWidth', { get: () => 1301 });
         Object.defineProperty(window, 'outerHeight', { get: () => 724 });
-        
+
         Object.defineProperty(window.screen, 'width', { get: () => 1301 });
         Object.defineProperty(window.screen, 'height', { get: () => 724 });
         Object.defineProperty(window.screen, 'availWidth', { get: () => 1301 });
@@ -212,6 +212,3 @@ headers = {
 # "Sec-Fetch-Mode": "navigate",
 # "Sec-Fetch-Site": "none",
 # "Sec-Fetch-User": "?1",
-
-
-

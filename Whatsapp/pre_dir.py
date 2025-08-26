@@ -2,7 +2,6 @@
 Here we have cleanly defined all the directories we have created with desc of why they exist.
 """
 import pathlib as pa
-from os import mkdir
 
 from Whatsapp import SETTINGS
 
@@ -53,6 +52,8 @@ def ensureProfile(profile: str=SETTINGS.PROFILE) -> pa.Path:
 def getLogsFile(profile: str = SETTINGS.PROFILE) -> pa.Path:
     return ensureProfile(profile) / "Logs.txt"
 
+def getTraceDir(profile: str = SETTINGS.PROFILE) -> pa.Path:
+    return ensureProfile(profile) / "TraceDir"
 
 def TraceStart(profile: str = SETTINGS.PROFILE) -> pa.Path:
     # This is a directory for temporary trace data

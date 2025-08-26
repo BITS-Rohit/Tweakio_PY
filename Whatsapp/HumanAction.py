@@ -52,7 +52,7 @@ def move_mouse_smooth(page, target_x, target_y, steps=50):
     page.mouse.move(target_x, target_y)
     current_mouse_position = {"x": target_x, "y": target_y}
 
-def move_mouse_to_locator(page, locator):
+def Move_mouse_to_locator(page, locator):
     """Moves mouse to a random point inside the element handle's bounding box."""
     box = locator.bounding_box()
     if not box:
