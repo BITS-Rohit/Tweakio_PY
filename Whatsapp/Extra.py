@@ -4,6 +4,7 @@ import pickle
 import random
 import shutil
 import time
+from typing import Union
 
 from playwright.sync_api import Page, Locator, ElementHandle
 
@@ -172,7 +173,7 @@ def get_Timestamp(message: 'ElementHandle') -> str:
         return ""
 
 
-def trace_message(seen_messages: dict, chat: 'ElementHandle', message: 'ElementHandle') -> None:
+def trace_message(seen_messages: dict, chat: Union['ElementHandle','Locator'], message: 'ElementHandle') -> None:
     """Tracks a unique message and stores its details if not already seen."""
     try:
         data_id = sc.get_dataID(message)

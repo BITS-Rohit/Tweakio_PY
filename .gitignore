@@ -47,5 +47,9 @@ PopUp.png
 /PopUp.png
 Whatsapp/Helper Directory For User
 /Whatsapp/whatsapp_web_fg
+!/Whatsapp/BrowserManager/__init__.py
+/Whatsapp/BrowserManager/*
+/Whatsapp/storage_state.json
+/Whatsapp/files/*
 /Whatsapp/BrowserManager/CusBrowser.py
-/Whatsapp/BrowserManager/stealing.py
+/Whatsapp/BrowserManager/Stealing.py

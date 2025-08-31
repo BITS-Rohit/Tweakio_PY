@@ -6,10 +6,10 @@ Conventions:
 - All other elements returned are of the type `Locator`.
 - Utility functions are written to extract attributes or recognize content like images, videos, or quoted messages.
 """
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
-    from playwright.sync_api import Page, Locator, ElementHandle
+    from playwright.sync_api import Locator, ElementHandle, Page
 
 
 def chat_list(page: 'Page') -> 'Locator':
@@ -161,9 +161,9 @@ def messages_outgoing(page: 'Page') -> 'Locator':
     return page.locator('[role="row"] div[data-id] .message-out')
 
 
-def get_message_text(message_element: 'ElementHandle') -> str:
+def get_message_text(message_element: Union['ElementHandle', 'Locator']) -> str:
     """Returns the text content of a message if visible."""
-    # Query the span inside the frozen message element
+    if isinstance(message_element, Locator): message_element = message_element.element_handle()
     span = message_element.query_selector("span.selectable-text.copyable-text")
     if span and span.is_visible():
         return span.text_content() or ""
@@ -262,7 +262,8 @@ def isVideo(message: 'ElementHandle') -> bool:
     Check if a WhatsApp message DOM element (ElementHandle) is a video.
     Supports aria-hidden="true" icons.
     """
-    return message.query_selector( "div[role='button']").query_selector("span[data-icon='media-play'],span[data-icon='msg-video']").is_visible()
+    return message.query_selector("div[role='button']").query_selector(
+        "span[data-icon='media-play'],span[data-icon='msg-video']").is_visible()
 
 
 def is_Voice_Message(message: 'ElementHandle') -> bool:
@@ -271,8 +272,9 @@ def is_Voice_Message(message: 'ElementHandle') -> bool:
     )
     return voice.is_visible() if voice else False
 
+
 import re
-from playwright.sync_api import ElementHandle
+
 
 def is_gif(message: 'ElementHandle') -> 'ElementHandle':
     """
@@ -288,7 +290,6 @@ def is_gif(message: 'ElementHandle') -> 'ElementHandle':
     if gif_btn and gif_btn.is_visible():
         return gif_btn
     return None
-
 
 
 def is_animated_sticker(message: 'ElementHandle') -> 'ElementHandle':
@@ -309,7 +310,6 @@ def is_animated_sticker(message: 'ElementHandle') -> 'ElementHandle':
     return None
 
 
-
 def is_plain_sticker(message: 'ElementHandle') -> 'ElementHandle':
     """
     Returns the handle if a static sticker image is present using XPath.
@@ -318,7 +318,6 @@ def is_plain_sticker(message: 'ElementHandle') -> 'ElementHandle':
     return message.query_selector(
         "xpath=.//button[img[contains(@src,'blob:')] and (@aria-label='Sticker with no label' or contains(@aria-label,'Sticker'))]"
     )
-
 
 
 def is_lottie_animation_sticker(message: 'ElementHandle') -> 'ElementHandle':
@@ -347,7 +346,6 @@ def isSticker(message: 'ElementHandle') -> bool:
     ])
 
 
-
 # -------------------- Quoted Message Utilities -------------------- #
 
 def isQuotedText(message: 'ElementHandle') -> 'ElementHandle':
@@ -355,7 +353,8 @@ def isQuotedText(message: 'ElementHandle') -> 'ElementHandle':
     Checks if a message is quoting another and returns the quoted‑message button handle.
     Matches any div with a data-pre-plain-text attribute, then its button labeled "Quoted message".
     """
-    return message.query_selector("div[data-pre-plain-text]").query_selector("div[role='button'] >> span.quoted-mention")
+    return message.query_selector("div[data-pre-plain-text]").query_selector(
+        "div[role='button'] >> span.quoted-mention")
 
 
 def get_QuotedText_handle(message: 'ElementHandle') -> str:

@@ -1,3 +1,7 @@
+rich
+langchain-ollama
+langchain-anthropic
+langchain-openai
 langgraph
 browserforge
 aiofiles==24.1.0
