@@ -61,7 +61,7 @@ def post_process(page: Page, message: Locator, f_name: str, f_info: str):
         case 'saveVid':
             helper.save_video(page=page, message=message)
         case "detect":
-            helper.detect(m = f_info, page=page,message=message)
+            helper.detect(page=page, message=message)
         case "ai":
             helper.ai(page=page, message=message, ask=f_info)
         case "inject":

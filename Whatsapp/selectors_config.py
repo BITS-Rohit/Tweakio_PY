@@ -6,74 +6,74 @@ Conventions:
 - All other elements returned are of the type `Locator`.
 - Utility functions are written to extract attributes or recognize content like images, videos, or quoted messages.
 """
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
-if TYPE_CHECKING:
-    from playwright.sync_api import Locator, ElementHandle, Page
+from playwright.sync_api import Locator, ElementHandle, Page
 
 
-def chat_list(page: 'Page') -> 'Locator':
+def chat_list(page: Page) -> Locator:
     """Returns the chat list grid locator on the main UI."""
     return page.get_by_role("grid", name=re.compile("chat list", re.I))
 
 
-def message_chat_panel(page: 'Page') -> 'Locator':
+def message_chat_panel(page: Page) -> Locator:
     """ Gives the message container panel"""
     return page.locator("div[id='main']").get_by_role("application").first
 
 
-def new_chat_chat_list_panel(page: 'Page') -> 'Locator':
+def new_chat_chat_list_panel(page: Page) -> Locator:
     """ Return the locator for the new chat on the chat list upper panel"""
     return page.get_by_role("button", name=re.compile("new chat", re.I)).first
 
 
-def searchBox_chatList_panel(page: 'Page') -> 'Locator':
+def searchBox_chatList_panel(page: Page) -> Locator:
     """Returns the search box on the chat list panel"""
     return page.get_by_role("textbox", name=re.compile("search input textbox", re.I)).first
 
 
-def message_box(page: 'Page') -> 'Locator':
+def message_box(page: Page) -> Locator:
     """Message Input box on the message panel"""
     return page.get_by_role("textbox", name=re.compile("type a message", re.I))
 
 
-def wa_icon(page: 'Page') -> 'Locator':
+def wa_icon(page: Page) -> Locator:
     """WhatsApp icon locator"""
     return page.get_by_role("heading", name="WhatsApp").first
 
 
-def chat_list_filters_ALL(page: 'Page') -> 'Locator':
+def chat_list_filters_ALL(page: Page) -> Locator:
     """Return the chat list filter : ALL """
     return page.locator("#all-filter")
 
 
-def chat_list_filters_Unread(page: 'Page') -> 'Locator':
+def chat_list_filters_Unread(page: Page) -> Locator:
     """Return the chat list filter : Unread"""
     return page.locator("#unread-filter")
 
 
-def chat_list_filters_favorites(page: 'Page') -> 'Locator':
+def chat_list_filters_favorites(page: Page) -> Locator:
     """Return the chat list filter : Favorites"""
     return page.locator("#favorites-filter")
 
 
-def chat_list_filters_groups(page: 'Page') -> 'Locator':
+def chat_list_filters_groups(page: Page) -> Locator:
     """Return the chat list filter : Groups"""
     return page.locator("#group-filter")
 
 
-def total_chats(page: 'Page') -> int:
+def total_chats(page: Page) -> int:
     """Returns the total number of chats visible in the chat list."""
     return int(chat_list(page).get_attribute("aria-rowcount"))
 
 
-def chat_items(page: 'Page') -> 'Locator':
+def chat_items(page: Page) -> Locator:
     """Returns a locator for all individual chat items (buttons) in the list."""
     return chat_list(page).get_by_role("listitem")
 
 
-def getChat_lowImg(chat: 'ElementHandle') -> str:
+def getChat_lowImg(chat: Union[ElementHandle,Locator]) -> str:
     """Extracts the low-quality image (thumbnail) from a chat preview item."""
+    if isinstance(chat,Locator): chat = chat.element_handle(timeout=1001)
     group_icon = chat.query_selector("span[data-icon='default-group-refreshed']")
     if group_icon and group_icon.is_visible():
         return "Default group icon"
@@ -85,19 +85,21 @@ def getChat_lowImg(chat: 'ElementHandle') -> str:
     return ""
 
 
-def getChatName(chat: 'ElementHandle') -> str:
+def getChatName(chat: Union[ElementHandle,Locator]) -> str:
     """Returns the primary chat name (first span[title]) or empty string."""
+    if isinstance(chat , Locator): chat = chat.element_handle(timeout=1001)
     span = chat.query_selector("span[title]")
     if span:
         return span.get_attribute("title") or ""
     return ""
 
 
-def is_community(chat: 'ElementHandle') -> str:
+def is_community(chat: Union[ElementHandle,Locator]) -> str:
     """
     If this chat item has the 'default-community-refreshed' icon,
     return the community name (the span[title] without a data-icon).
     """
+    if isinstance(chat, Locator):chat = chat.element_handle(timeout=1001)
     icon = chat.query_selector("span[data-icon='default-community-refreshed']")
     if icon and icon.is_visible():
         # pick the first title‐span that does NOT have a data-icon
@@ -143,7 +145,7 @@ def _side_Bar_Communities(page: 'Page') -> 'Locator':
 
 # -------------------- Messages Section -------------------- #
 
-def messages(page: 'Page') -> 'Locator':
+def messages(page: 'Page') -> Locator:
     """
     Returns a locator for all messages in the current open chat.
     Each message element has a unique `data-id` and role "row".
@@ -170,13 +172,16 @@ def get_message_text(message_element: Union['ElementHandle', 'Locator']) -> str:
     return ""
 
 
-def is_message_out(message: 'ElementHandle') -> bool:
+def is_message_out(message: Union[ElementHandle, Locator]) -> bool:
     """Returns True if the message is outgoing (sent by bot)."""
-    element = message.query_selector(".message-out")
+    if isinstance(message, ElementHandle):
+        element = message.query_selector(".message-out")
+    else:
+        element = message.locator(".message-out")
     return element is not None and element.is_visible()
 
 
-def get_dataID(message: 'ElementHandle') -> str:
+def get_dataID(message: Union[ElementHandle, Locator]) -> str:
     """Returns the unique data-id attribute of a message."""
     return message.get_attribute("data-id") or ""
 
@@ -241,9 +246,10 @@ def get_mess_pic_url(message: 'ElementHandle') -> str:
     return ""
 
 
-def isReacted(message: 'ElementHandle') -> bool:
+def isReacted(message: Union[ElementHandle,Locator]) -> bool:
     """Check if the message is reacted or not"""
     try:
+        if isinstance(message, Locator): message = message.element_handle(timeout=1001)
         btn = message.query_selector("button[aria-label*='reaction 👍']")
         return btn.is_visible() if btn else False
     except:

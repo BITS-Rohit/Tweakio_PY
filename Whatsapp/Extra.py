@@ -49,8 +49,9 @@ def MessageToChat(page: Page) -> None:
     print("Messaged: Logged in, Success.Tweakio: Hi ! \n Messaging Done.")
 
 
-def getJID_mess(message: 'ElementHandle') -> str:
+def getJID_mess(message: Union[ElementHandle, Locator]) -> str:
     """Returns the JID of the message like: 7678xxxxxx@c.us"""
+    if isinstance(message, Locator): message = message.element_handle(timeout=1001)
     data_id = sc.get_dataID(message)
     if not data_id or "_" not in data_id:
         return ""
@@ -58,10 +59,11 @@ def getJID_mess(message: 'ElementHandle') -> str:
     return parts[1] if len(parts) > 1 else ""
 
 
-def getSenderID(message: 'ElementHandle') -> str:
+def getSenderID(message: Union[ElementHandle, Locator]) -> str:
     """
     Returns the name if it does not have a sender else returns the number of senders.
     """
+    if isinstance(message, Locator): message = message.element_handle(timeout=1001)
     raw = sc.get_dataID(message)
 
     def getfromlid() -> str:
@@ -89,8 +91,9 @@ def getSenderID(message: 'ElementHandle') -> str:
         return ""
 
 
-def getGID_CID(message: 'ElementHandle') -> str:
+def getGID_CID(message: Union[ElementHandle, Locator]) -> str:
     """Gives Group ID for groups and Chat ID for single chats"""
+    if isinstance(message, Locator): message = message.element_handle(timeout=1001)
     try:
         raw = sc.get_dataID(message)
         print(f"raw : {raw}")
@@ -105,16 +108,17 @@ def getGID_CID(message: 'ElementHandle') -> str:
         return ""
 
 
-def getDirection(message: 'ElementHandle') -> str:
+def getDirection(message: ElementHandle) -> str:
     """Returns a direction [out: bot | in: other] showcasing the message from the bot number or from another number."""
     return "out" if sc.is_message_out(message) else "in"
 
 
-def get_mess_type(message: ElementHandle) -> str:
+def get_mess_type(message: Union[ElementHandle, Locator]) -> str:
     """Returns the specific type of message: image, video, audio, gif, sticker, quoted, text"""
+    if isinstance(message, Locator): message = message.element_handle(timeout=1001)
     try:
         try:
-            if sc.pic_handle(message) :
+            if sc.pic_handle(message):
                 return "image"
         except Exception as e:
             print(f"Error checking image: {e}")
@@ -157,9 +161,9 @@ def get_mess_type(message: ElementHandle) -> str:
         return "unknown"
 
 
-
-def get_Timestamp(message: 'ElementHandle') -> str:
+def get_Timestamp(message: Union[ElementHandle, Locator]) -> str:
     """Returns TimeStamp of the WhatsApp stored Time of the message."""
+    if isinstance(message, Locator): message = message.element_handle(timeout=1001)
     try:
         element = message.query_selector("div[data-pre-plain-text]")
         if element:
@@ -173,7 +177,8 @@ def get_Timestamp(message: 'ElementHandle') -> str:
         return ""
 
 
-def trace_message(seen_messages: dict, chat: Union['ElementHandle','Locator'], message: 'ElementHandle') -> None:
+def trace_message(seen_messages: dict, chat: Union[ElementHandle, Locator],
+                  message: Union[ElementHandle, Locator]) -> None:
     """Tracks a unique message and stores its details if not already seen."""
     try:
         data_id = sc.get_dataID(message)
@@ -270,11 +275,12 @@ def pick_adminList() -> list:
 
 
 # --- ---- Unread Handle ---- ---
-def is_unread(chat: 'ElementHandle') -> int:
+def is_unread(chat : Union[ElementHandle,Locator]) -> int:
     """
     Return 1 if the chat has actual unread messages (with a numeric count),
     else 0 if only marked as unread manually (no numeric badge).
     """
+    if isinstance(chat , Locator): chat = chat.element_handle(timeout=1001)
     try:
         unread_badge = chat.query_selector("[aria-label*='unread']")
         if unread_badge:
@@ -288,14 +294,15 @@ def is_unread(chat: 'ElementHandle') -> int:
         return 0
 
 
-def do_unread(page: Page, chat: 'ElementHandle') -> None:
+def do_unread(page: Page, chat : Union[ElementHandle,Locator]) -> None:
     """
     Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'.
     """
+    if isinstance(chat , Locator): chat = chat.element_handle(timeout=1001)
     try:
         # ha.move_mouse_to_locator(page, chat)
         chat.click(button="right")
-        time.sleep(random.uniform(1.5, 2.5))
+        time.sleep(random.uniform(1.3, 2.5))
 
         app_menu = page.query_selector("role=application")  # top-level menu
         if not app_menu:
@@ -304,7 +311,7 @@ def do_unread(page: Page, chat: 'ElementHandle') -> None:
         unread_option = app_menu.query_selector("li span:text-matches('mark as unread', 'i')")
         if unread_option:
             # ha.move_mouse_to_locator(page, unread_option)
-            unread_option.click(timeout=2000)
+            unread_option.click(timeout=random.randint(1701,2001))
         else:
             raise Exception("'Mark as unread' option not found or not visible")
 
@@ -336,3 +343,38 @@ def cleanFolder(folder: pa.Path) -> None:
                     shutil.rmtree(item)
             except Exception as e:
                 print(f"⚠️ Could not delete {item}: {e}")
+
+def get_LocatorBack(page : Page , element :ElementHandle) -> Locator:
+    """
+    Returns a locator with unique css extracted from the element Handle
+    :param page:
+    :param element:
+    :return:
+    """
+    css = element.evaluate("""
+    (el) => {
+        function cssPath(el) {
+            if (!(el instanceof Element)) return;
+            const path = [];
+            while (el.nodeType === Node.ELEMENT_NODE) {
+                let selector = el.nodeName.toLowerCase();
+                if (el.id) {
+                    selector += '#' + el.id;
+                    path.unshift(selector);
+                    break;
+                } else {
+                    let sib = el, nth = 1;
+                    while (sib = sib.previousElementSibling) {
+                        if (sib.nodeName.toLowerCase() === selector) nth++;
+                    }
+                    if (nth != 1) selector += `:nth-of-type(${nth})`;
+                }
+                path.unshift(selector);
+                el = el.parentNode;
+            }
+            return path.join(" > ");
+        }
+        return cssPath(el);
+    }
+    """)
+    return page.locator(css)

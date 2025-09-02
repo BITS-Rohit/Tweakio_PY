@@ -1,17 +1,19 @@
 import random
+from typing import Union
 
+from playwright.async_api import Locator
 from playwright.sync_api import Page, ElementHandle
 
 from Whatsapp import selectors_config as sc, HumanAction as ha, Media as med, Menu as menu, pre_dir as pwd
 
 
-def double_edge_click(page: Page, message: ElementHandle) -> bool:
-    print("In double edge click")
+def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> bool:
+    # print("In double edge click")
     try:
         attempts = 0
         while message.bounding_box() is None and attempts < 20:
             page.mouse.wheel(0, -random.randint(150, 250))
-            page.wait_for_timeout(random.randint(768,1302))
+            page.wait_for_timeout(timeout=random.randint(768, 1302))
             attempts += 1
             print(f"Done scrolling : attempts : {attempts}")
 
@@ -26,18 +28,20 @@ def double_edge_click(page: Page, message: ElementHandle) -> bool:
 
         page.mouse.move(rel_x, rel_y)
 
+        if isinstance(message, Locator): message = message.element_handle()  # Make it just before the clicking
+
         message.click(
             position={"x": rel_x, "y": rel_y},  # relative to element
             click_count=2,
-            timeout=1000
+            timeout=2000
         )
 
         # small pause to let UI react
-        page.wait_for_timeout(100)
+        page.wait_for_timeout(timeout=500)
 
         # message.click(click_count=3)
         print("Double click done")
-        print("out of double edge click")
+        # print("out of double edge click")
         return True
 
     except Exception as e:
@@ -59,6 +63,7 @@ def reply(page: Page, locator: ElementHandle, text: str) -> None:
     """
     if reply_(page=page, message=locator, text=text):
         page.keyboard.press("Enter")
+    else : print("Reply Returned False , Cant Press Enter")
 
 
 def reply_(page: Page, message: ElementHandle, text: str, retry: int = 0) -> bool:
@@ -79,9 +84,9 @@ def reply_(page: Page, message: ElementHandle, text: str, retry: int = 0) -> boo
 
         inBox = sc.message_box(page)
         # ha.move_mouse_to_locator(page, inBox.element_handle())
-        inBox.click()
+        inBox.click(timeout=2000)
 
-        ha.human_send(page=page, element=inBox.element_handle(), text=text)
+        ha.human_send(page=page, element=inBox.element_handle(timeout=1000), text=text)
         return True
     except Exception as e:
         if retry < 3:

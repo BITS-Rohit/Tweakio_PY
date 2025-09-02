@@ -67,11 +67,7 @@ def Start_Handling(p: Page) -> None:
         print(f"Handle chats error: {e}")
 
 
-def _check_messages(L_chat: Union[ElementHandle,Locator], y: int) -> None:  # change
-    if isinstance(L_chat, Locator):
-        chat = L_chat.element_handle()
-    else:
-        chat = L_chat
+def _check_messages(chat: Union[ElementHandle,Locator], y: int) -> None:  # change
 
     admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
                   SETTINGS.NLP, SETTINGS.QUANTIFIER, "--ban--", "--unban--"]
@@ -80,7 +76,7 @@ def _check_messages(L_chat: Union[ElementHandle,Locator], y: int) -> None:  # ch
         if name == "":
             print("Error getting chat name : ")
 
-        Personal_auth = PersonalChatCheck(chat=L_chat)
+        Personal_auth = PersonalChatCheck(chat=chat)
         if not Personal_auth:
             unread = ex.is_unread(chat)
             if unread == 0:
@@ -90,49 +86,87 @@ def _check_messages(L_chat: Union[ElementHandle,Locator], y: int) -> None:  # ch
         print(f"Opening Top chat [no - {y}] with name -  {name} ")
         # ha.move_mouse_to_locator(page, chat)
         print("--Top chat has new messages--")
-        L_chat.click(timeout=random.uniform(0.7,1.2))
+        chat.click(timeout=random.randint(1801,2001))
         try:
             print("<><><><><><><><><><><><><><>")
-            messages = sc.messages(page)
-            n = messages.count()
-            if not n :
-                raise Exception("No messages found in opened chat.")
 
-            last_ID = sc.get_dataID(messages.nth(n - 1).element_handle(timeout=random.uniform(0.7,1.2)))
-            if not last_ID:
-                raise Exception("Data ID is not correct in last message // Brain//check messages")
+            try:
+                messages = sc.messages(page)
+                n = messages.count()
+                if not n:
+                    raise Exception("No messages found in opened chat.")
+            except Exception as e:
+                print(f"[ERROR] Fetching messages/count failed: {e}")
+                raise
+
+            try:
+                last_ID = sc.get_dataID(messages.nth(n - 1).element_handle(timeout=random.uniform(700, 1200)))
+                if not last_ID:
+                    raise Exception("Data ID is not correct in last message // Brain // check messages")
+            except Exception as e:
+                print(f"[ERROR] Getting last message ID failed: {e}")
+                raise
 
             while True:
-                print(f"Total messages fetched : {n}")
+                try:
+                    print(f"Total messages fetched : {n}")
 
-                for i in range(n):
-                    message = messages.nth(i)
-                    text = sc.get_message_text(message).strip()
-                    if not text or text.split(" ")[0].lower() not in admin_cmds:
-                        continue
-                    _auth_handle(message=message, text=text, chat=chat, p_chat=Personal_auth)
+                    for i in range(n):
+                        try:
+                            message = messages.nth(i)
+                            text = sc.get_message_text(message).strip()
 
-                messages = sc.messages(page)
-                current_last_id = sc.get_dataID(messages.nth(n - 1).element_handle(timeout=random.uniform(0.7,1.2)))
+                            if not text:
+                                continue
 
-                if not current_last_id:
-                    raise Exception("Data ID is not correct in last message // Brain//check messages")
+                            if text.split(" ")[0].lower() not in admin_cmds:
+                                continue
 
-                if current_last_id == last_ID: break  # No new messages
-                last_ID = current_last_id
+                            try:
+                                _auth_handle(Locator_message=message, text=text, Locator_chat=chat, p_chat=Personal_auth)
+                            except Exception as e:
+                                print(f"[ERROR] Auth handler failed for message {i}: {e}")
+                        except Exception as e:
+                            print(f"[ERROR] Processing message {i} failed: {e}")
+
+                    # refresh messages
+                    try:
+                        messages = sc.messages(page)
+                        current_last_id = sc.get_dataID(
+                            messages.nth(n - 1).element_handle(timeout=random.uniform(700, 1200)))
+                    except Exception as e:
+                        print(f"[ERROR] Refreshing messages or getting last ID failed: {e}")
+                        raise
+
+                    if not current_last_id:
+                        raise Exception("Data ID is not correct in last message // Brain // check messages")
+
+                    if current_last_id == last_ID:
+                        break  # No new messages
+                    last_ID = current_last_id
+
+                except Exception as e:
+                    print(f"[ERROR] Loop iteration failed: {e}")
+                    break
 
             print("<><><><><><><><><><><><><><>")
 
             if not Personal_auth:
-                ex.do_unread(page=page, chat=chat)
+                try:
+                    ex.do_unread(page=page, chat=chat)
+                except Exception as e:
+                    print(f"[ERROR] Marking unread failed: {e}")
+
         except Exception as e:
             print(f"Error in live messages loop // check messages : {e}")
+
 
     except Exception as e:
         print(f"Error in check messages : {e}")
 
 
 def _auth_handle(Locator_message: Union[ElementHandle,Locator], text: str, Locator_chat: Union[ElementHandle,Locator], p_chat: bool = False) -> None:  # change
+    message :ElementHandle= None
     try:
         if isinstance(Locator_message, Locator):message = Locator_message.element_handle()
         else : message = Locator_message
@@ -339,10 +373,9 @@ def PersonalChatCheck(chat: Locator) -> bool:
         you = chat.get_by_role("gridcell").get_by_text("(You)", exact=True)
 
         if you.is_visible():
-            # ha.move_mouse_to_locator(page=page, locator=chat.element_handle())
-            chat.click()
+            chat.click(timeout=random.randint(1801,2001))
             messages = sc.messages(page=page)
-            message = messages.nth(0).element_handle()  # Any message can define the authentication
+            message = messages.nth(0).element_handle(timeout=1001)  # Any message can define the authentication
 
             num = ex.getJID_mess(message).replace("@c.us", "")
             BOT_NUMBER = re.sub(r"\D", "", SETTINGS.BOT_NUMBER)

@@ -70,10 +70,11 @@ def human_send(page: Page, element: ElementHandle, text: str):
     Falls back to paste if the message is large.
     Works with ElementHandle instead of Locator.
     """
-    element.click()
-    time.sleep(0.1)
-
+    element.click(timeout=2000)
     try:
+        element.press(key="Control+A")
+        element.press(key="Backspace")
+        print(" in human send , Cleared Previous text")
         lines = text.split("\n")
 
         # If short text with no newline, type normally

@@ -1,8 +1,10 @@
 import base64
 import random
+import re
 import time
+from typing import Union
 
-from playwright.sync_api import Page, ElementHandle
+from playwright.sync_api import Page, ElementHandle, Locator
 
 from Langchain_AI import run_gemini
 from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
@@ -11,8 +13,10 @@ from Whatsapp.selectors_config import isReacted
 
 # ----------------
 gemini = run_gemini.Gemini()
+
+
 # ----------------
-def setq(page: Page, locator: 'ElementHandle', quant: str) -> None:
+def setq(page: Page, locator: ElementHandle, quant: str) -> None:
     """
     Updates the bot's quantifier setting to the given value.
 
@@ -30,7 +34,7 @@ def setq(page: Page, locator: 'ElementHandle', quant: str) -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def setchat(page: Page, locator: 'ElementHandle', max_chat_num: str) -> None:
+def setchat(page: Page, locator: ElementHandle, max_chat_num: str) -> None:
     """
     Updates the maximum number of chats the bot should fetch.
 
@@ -53,7 +57,7 @@ def setchat(page: Page, locator: 'ElementHandle', max_chat_num: str) -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def helper(page: Page, locator: 'ElementHandle') -> None:
+def helper(page: Page, locator: ElementHandle) -> None:
     """
     Sends a menu/help message to the user listing available commands.
 
@@ -67,7 +71,7 @@ def helper(page: Page, locator: 'ElementHandle') -> None:
     rep.reply(page=page, locator=locator, text=menu.menu())
 
 
-def setgc(page: Page, locator: 'ElementHandle', gc_val: str) -> None:
+def setgc(page: Page, locator: ElementHandle, gc_val: str) -> None:
     """
     Enables or disables the bot's global mode based on user input.
 
@@ -102,7 +106,7 @@ def setgc(page: Page, locator: 'ElementHandle', gc_val: str) -> None:
     rep.reply(page=page, locator=locator, text=response_text)
 
 
-def manual(page: Page, locator: 'ElementHandle', f_name: str) -> None:
+def manual(page: Page, locator: ElementHandle, f_name: str) -> None:
     """
     Sends the user a manual/guide for a specific bot command.
 
@@ -119,7 +123,7 @@ def manual(page: Page, locator: 'ElementHandle', f_name: str) -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def remove_admin(page: Page, locator: 'ElementHandle', num: str) -> None:
+def remove_admin(page: Page, locator: ElementHandle, num: str) -> None:
     """
     Removes a number from the admin list if present.
 
@@ -141,7 +145,7 @@ def remove_admin(page: Page, locator: 'ElementHandle', num: str) -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def add_admin(page: Page, locator: 'ElementHandle', num: str) -> None:
+def add_admin(page: Page, locator: ElementHandle, num: str) -> None:
     """
     Adds a new admin number to the admin list.
 
@@ -163,7 +167,7 @@ def add_admin(page: Page, locator: 'ElementHandle', num: str) -> None:
         rep.reply(page=page, locator=locator, text="`Failed. Retry with numbers given only.`")
 
 
-def showlist(page: Page, locator: 'ElementHandle') -> None:
+def showlist(page: Page, locator: ElementHandle) -> None:
     """
     Displays the current admin list to the user.
 
@@ -178,7 +182,7 @@ def showlist(page: Page, locator: 'ElementHandle') -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def banlist(page: Page, locator: 'ElementHandle') -> None:
+def banlist(page: Page, locator: ElementHandle) -> None:
     """
     Displays the current banned numbers list to the user.
 
@@ -193,7 +197,7 @@ def banlist(page: Page, locator: 'ElementHandle') -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def showgc(page: Page, locator: 'ElementHandle') -> None:
+def showgc(page: Page, locator: ElementHandle) -> None:
     """
     Shows the current state of the global mode.
 
@@ -208,7 +212,7 @@ def showgc(page: Page, locator: 'ElementHandle') -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def showq(page: Page, locator: 'ElementHandle') -> None:
+def showq(page: Page, locator: ElementHandle) -> None:
     """
     Shows the currently active quantifier.
 
@@ -223,7 +227,7 @@ def showq(page: Page, locator: 'ElementHandle') -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-def showchat(page: Page, locator: 'ElementHandle') -> None:
+def showchat(page: Page, locator: ElementHandle) -> None:
     """
     Shows the maximum number of chats currently configured.
 
@@ -238,10 +242,9 @@ def showchat(page: Page, locator: 'ElementHandle') -> None:
     rep.reply(page=page, locator=locator, text=text)
 
 
-
 # ---- Media Content--------------
 
-def save_video(page: Page, chat: 'ElementHandle', message: 'ElementHandle', filename: str = None) -> None:
+def save_video(page: Page, chat: ElementHandle, message: ElementHandle, filename: str = None) -> None:
     """
     Saves a video from a WhatsApp message using ElementHandle.
     """
@@ -255,7 +258,7 @@ def save_video(page: Page, chat: 'ElementHandle', message: 'ElementHandle', file
             return ""
 
         playmedia.hover()
-        playmedia.click()
+        playmedia.click(timeout=random.randint(1801, 2001))
 
         try:
             page.wait_for_selector("video[src]", timeout=5000)
@@ -296,8 +299,18 @@ def save_video(page: Page, chat: 'ElementHandle', message: 'ElementHandle', file
 
 # ------------ Message Prettifiers----------------
 
-def react(message: 'ElementHandle', page: Page, tries: int = 0) -> None:
+def react(message: Union[ElementHandle, Locator], page: Page, tries: int = 0) -> None:
+    if isinstance(message, Locator): message = message.element_handle(timeout=1001)
     try:
+        attempts = 0
+        while message.bounding_box() is None and attempts < 10:
+            page.mouse.wheel(0, -random.randint(150, 250))
+            page.wait_for_timeout(timeout=random.randint(801, 901))
+            attempts += 1
+
+        if message.bounding_box() is None:
+            return print("DOM is not attached to the page , Bounding box none // react") or None
+
         if not message:
             print("Message is None in react")
             return None
@@ -317,13 +330,9 @@ def react(message: 'ElementHandle', page: Page, tries: int = 0) -> None:
         if not box:
             raise Exception("Message bounding box not found")
 
-        # ha.move_mouse_to_locator(page, message)
-        message.hover(timeout=3000)
+        message.hover(timeout=1500)
 
-        # Scroll into view
-        message.scroll_into_view_if_needed(timeout=2500)
-
-        emoji_btn = message.query_selector("div[role='button'] >> span[data-icon='emoji-refreshed']")
+        emoji_btn = page.get_by_role("button", name=re.compile("react", re.I)).first
         if not emoji_btn:
             if tries < 2:
                 print("Retrying... React button not visible yet.")
@@ -332,16 +341,16 @@ def react(message: 'ElementHandle', page: Page, tries: int = 0) -> None:
             else:
                 print("Max tries reached - couldn't find emoji button")
                 return None
+        try:
+            emoji_btn.click(timeout=random.randint(1801, 2001))
+        except Exception as e:
+            print(f"emoji button not found [{e}]")
 
-        # ha.move_mouse_to_locator(page, emoji_btn)
-        emoji_btn.click()
-
-        # Emoji dialog
         dialog = page.get_by_role("dialog").get_by_role("button").first
-        if not dialog:print("dialog not visible")
-        else :
-            # ha.move_mouse_to_locator(page, dialog.element_handle())
-            dialog.click()
+        if not dialog:
+            print("dialog not visible")
+        else:
+            dialog.click(timeout=random.randint(1801, 2001))
 
         time.sleep(random.uniform(1.0, 2.0))
         if sc.isReacted(message):
@@ -356,24 +365,21 @@ def react(message: 'ElementHandle', page: Page, tries: int = 0) -> None:
             print(f"Final failure in react(): {e}")
 
 
-
-
-def detect(m : str , page : Page, message : ElementHandle) -> None:  # change to ElementHandle
-    # if m=="on" : _.detect = True
-    # else : _.detect = False
+def detect(page: Page, message: ElementHandle) -> None:  # change to ElementHandle
     text = f"`Detected Message Type : {ex.get_mess_type(message)}`"
-    rep.reply(page=page, locator=message, text=text)  # rep.reply still accepts Locator; may need wrapping if fully ElementHandle
+    rep.reply(page=page, locator=message,
+              text=text)  # rep.reply still accepts Locator; may need wrapping if fully ElementHandle
 
 
 # ------------  ----------- AI ------------ ------------ #
-def ai(page: Page, message: 'ElementHandle', ask: str) -> None:  # change to ElementHandle
+def ai(page: Page, message: ElementHandle, ask: str) -> None:  # change to ElementHandle
     """Gets AI answer for the given ask string and replies via the page"""
     response = gemini.chat(user_input=ask)  # Call your AI synchronously
     rep.reply(page=page, locator=message, text=response)  # rep.reply still accepts Locator
 
 
 # -------- -------- -------- -------- -------- -------- -------- -------- -------- --------
-def nlp(page: Page, message: 'ElementHandle', f_info: str) -> None:  # change to ElementHandle
+def nlp(page: Page, message: ElementHandle, f_info: str) -> None:  # change to ElementHandle
     """ natural language-driven assessment command"""
     # Still Under development
     rep.reply(page=page, locator=message, text=f_info)  # same note: rep.reply may need locator conversion
