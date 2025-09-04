@@ -10,6 +10,7 @@ from Whatsapp import selectors_config as sc, HumanAction as ha, Media as med, Me
 def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> bool:
     # print("In double edge click")
     try:
+        if isinstance(message, Locator): message = message.element_handle()  # Make it just before the clicking
         attempts = 0
         while message.bounding_box() is None and attempts < 20:
             page.mouse.wheel(0, -random.randint(150, 250))
@@ -18,7 +19,7 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
             print(f"Done scrolling : attempts : {attempts}")
 
         condition = sc.is_message_out(message)  # True = outgoing, False = incoming
-        print(f"Condition : {condition}")
+        # print(f"Condition : {condition}")
 
         box = message.bounding_box()
 
@@ -27,12 +28,10 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
         rel_y = box["height"] / 2
 
         page.mouse.move(rel_x, rel_y)
-
-        if isinstance(message, Locator): message = message.element_handle()  # Make it just before the clicking
-
         message.click(
             position={"x": rel_x, "y": rel_y},  # relative to element
             click_count=2,
+            delay=random.randint(38, 69),
             timeout=2000
         )
 
@@ -40,7 +39,7 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
         page.wait_for_timeout(timeout=500)
 
         # message.click(click_count=3)
-        print("Double click done")
+        # print("Double click done")
         # print("out of double edge click")
         return True
 
@@ -50,7 +49,7 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
         return False
 
 
-def reply(page: Page, locator: ElementHandle, text: str) -> None:
+def reply(page: Page, element: Union[ElementHandle,Locator], text: str) -> None:
     """
     This is a reply function to reply to the message.
 
@@ -58,15 +57,15 @@ def reply(page: Page, locator: ElementHandle, text: str) -> None:
 
     Args:
         page (Page): Playwright page object.
-        locator (ElementHandle): The message element to reply to.
+        element (ElementHandle): The message element to reply to.
         text (str): The message text to send.
     """
-    if reply_(page=page, message=locator, text=text):
+    if reply_(page=page, message=element, text=text):
         page.keyboard.press("Enter")
     else : print("Reply Returned False , Cant Press Enter")
 
 
-def reply_(page: Page, message: ElementHandle, text: str, retry: int = 0) -> bool:
+def reply_(page: Page, message: Union[ElementHandle,Locator], text: str, retry: int = 0) -> bool:
     """
     Core reply function with retries, without pressing Enter automatically.
 
@@ -83,13 +82,12 @@ def reply_(page: Page, message: ElementHandle, text: str, retry: int = 0) -> boo
         double_edge_click(page=page, message=message)
 
         inBox = sc.message_box(page)
-        # ha.move_mouse_to_locator(page, inBox.element_handle())
         inBox.click(timeout=2000)
 
         ha.human_send(page=page, element=inBox.element_handle(timeout=1000), text=text)
         return True
     except Exception as e:
-        if retry < 3:
+        if retry < 1:
             return reply_(page=page, message=message, text=text, retry=retry + 1)
         print(f"Error in _reply : \n {e}")
     return False

@@ -7,7 +7,7 @@ from typing import Union
 from playwright.sync_api import Locator, Page, ElementHandle
 
 from Whatsapp import SETTINGS, selectors_config as sc, Extra as ex, ___ as _, Methods as helper, \
-    Reply as rep, post_process as process, pre_dir as pwd
+    Reply as rep, Agent_Commands as process, pre_dir as pwd
 
 # ----------------------------------------------------------------------------------------------------------------------
 debug = False
@@ -15,6 +15,7 @@ refreshTime = SETTINGS.REFRESH_TIME
 pause_mode = False
 page = None
 detect = True
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -67,7 +68,7 @@ def Start_Handling(p: Page) -> None:
         print(f"Handle chats error: {e}")
 
 
-def _check_messages(chat: Union[ElementHandle,Locator], y: int) -> None:  # change
+def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # change
 
     admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
                   SETTINGS.NLP, SETTINGS.QUANTIFIER, "--ban--", "--unban--"]
@@ -86,99 +87,88 @@ def _check_messages(chat: Union[ElementHandle,Locator], y: int) -> None:  # chan
         print(f"Opening Top chat [no - {y}] with name -  {name} ")
         # ha.move_mouse_to_locator(page, chat)
         print("--Top chat has new messages--")
-        chat.click(timeout=random.randint(1801,2001))
+        chat.click(timeout=2000)
         try:
             print("<><><><><><><><><><><><><><>")
 
-            try:
-                messages = sc.messages(page)
-                n = messages.count()
-                if not n:
-                    raise Exception("No messages found in opened chat.")
-            except Exception as e:
-                print(f"[ERROR] Fetching messages/count failed: {e}")
-                raise
+            # fetch initial messages
+            messages = sc.messages(page)
+            n = messages.count()
+            if not n:
+                raise Exception("No messages found in opened chat.")
 
-            try:
-                last_ID = sc.get_dataID(messages.nth(n - 1).element_handle(timeout=random.uniform(700, 1200)))
-                if not last_ID:
-                    raise Exception("Data ID is not correct in last message // Brain // check messages")
-            except Exception as e:
-                print(f"[ERROR] Getting last message ID failed: {e}")
-                raise
+            # get last message ID
+            last_ID = sc.get_dataID(messages.nth(n - 1).element_handle(timeout=1000))
+            if not last_ID:
+                raise Exception("Data ID is not correct in last message // Brain // check messages")
 
+            # live loop
             while True:
-                try:
-                    print(f"Total messages fetched : {n}")
+                print(f"Total messages fetched : {n}")
 
-                    for i in range(n):
-                        try:
-                            message = messages.nth(i)
-                            text = sc.get_message_text(message).strip()
+                for i in range(n):
+                    message = messages.nth(i)
+                    text = sc.get_message_text(message).strip()
 
-                            if not text:
-                                continue
+                    if not text or text.split(" ")[0].lower() not in admin_cmds:
+                        continue
 
-                            if text.split(" ")[0].lower() not in admin_cmds:
-                                continue
+                    # auth handler
+                    _auth_handle(
+                        Locator_message=message,
+                        text=text,
+                        Locator_chat=chat,
+                        p_chat=Personal_auth,
+                        page=page
+                    )
 
-                            try:
-                                _auth_handle(Locator_message=message, text=text, Locator_chat=chat, p_chat=Personal_auth)
-                            except Exception as e:
-                                print(f"[ERROR] Auth handler failed for message {i}: {e}")
-                        except Exception as e:
-                            print(f"[ERROR] Processing message {i} failed: {e}")
+                # refresh messages
+                messages = sc.messages(page)
+                current_last_id = sc.get_dataID(messages.nth(n - 1).element_handle(timeout=1000))
 
-                    # refresh messages
-                    try:
-                        messages = sc.messages(page)
-                        current_last_id = sc.get_dataID(
-                            messages.nth(n - 1).element_handle(timeout=random.uniform(700, 1200)))
-                    except Exception as e:
-                        print(f"[ERROR] Refreshing messages or getting last ID failed: {e}")
-                        raise
+                if not current_last_id:
+                    raise Exception("Data ID is not correct in last message // Brain // check messages")
 
-                    if not current_last_id:
-                        raise Exception("Data ID is not correct in last message // Brain // check messages")
+                if current_last_id == last_ID:
+                    break  # No new messages
 
-                    if current_last_id == last_ID:
-                        break  # No new messages
-                    last_ID = current_last_id
-
-                except Exception as e:
-                    print(f"[ERROR] Loop iteration failed: {e}")
-                    break
+                # update last_ID + message count for next iteration
+                last_ID = current_last_id
+                n = messages.count()
 
             print("<><><><><><><><><><><><><><>")
 
             if not Personal_auth:
-                try:
-                    ex.do_unread(page=page, chat=chat)
-                except Exception as e:
-                    print(f"[ERROR] Marking unread failed: {e}")
+                ex.do_unread(page=page, chat=chat)
 
         except Exception as e:
-            print(f"Error in live messages loop // check messages : {e}")
+            print(f"[ERROR] Live messages loop failed: {e}")
+
 
 
     except Exception as e:
         print(f"Error in check messages : {e}")
 
 
-def _auth_handle(Locator_message: Union[ElementHandle,Locator], text: str, Locator_chat: Union[ElementHandle,Locator], p_chat: bool = False) -> None:  # change
-    message :ElementHandle= None
+def _auth_handle(page : Page,Locator_message: Union[ElementHandle, Locator], text: str, Locator_chat: Union[ElementHandle, Locator],
+                 p_chat: bool = False) -> None:  # change
+    message: ElementHandle = None
     try:
-        if isinstance(Locator_message, Locator):message = Locator_message.element_handle()
-        else : message = Locator_message
+        if isinstance(Locator_message, Locator):
+            message = Locator_message.element_handle()
+        else:
+            message = Locator_message
 
-        if isinstance(Locator_chat, Locator):chat = Locator_chat.element_handle()
-        else : chat = Locator_chat
+        if isinstance(Locator_chat, Locator):
+            chat = Locator_chat.element_handle()
+        else:
+            chat = Locator_chat
 
         t = text.split(" ", 1)[0].lower().strip()
         data_id = sc.get_dataID(message)
 
         if not data_id:
-            print(f"[Empty data-ID]- Message: [{text}]" )
+            print(f"[Empty data-ID]- Message: [{text}]")
             return
 
         if data_id in _.seen_ids:
@@ -203,7 +193,15 @@ def _auth_handle(Locator_message: Union[ElementHandle,Locator], text: str, Locat
             except Exception as e:
                 print(f"Error in user_auth checks : {e}")
 
-        print(f"Prefix : {t}")
+        print(f"Prefix : {t}  -- Accepted : {SETTINGS.QUANTIFIER} ")
+
+        attempts = 0
+        while message.bounding_box() is None and attempts < 20:
+            page.mouse.wheel(0, -random.randint(300, 499))
+            page.wait_for_timeout(timeout=random.randint(300, 500))
+            attempts += 1
+
+        if message.bounding_box() is None:message.scroll_into_view_if_needed(timeout=2000)
 
         pause_handle(p_auth=Admin_AUTH, t=t, sender=sender, text=text, message=message)
 
@@ -220,7 +218,7 @@ def _auth_handle(Locator_message: Union[ElementHandle,Locator], text: str, Locat
 
                 if p_chat:
                     helper.react(message=message, page=page)
-                    rep.reply(page=page, locator=message, text="`You can't ban/unban personal chat`")
+                    rep.reply(page=page, element=message, text="`You can't ban/unban personal chat`")
                     check = True
                     return
 
@@ -230,11 +228,11 @@ def _auth_handle(Locator_message: Union[ElementHandle,Locator], text: str, Locat
                         _.ban_list.remove(GID)
                         _.ban_change = True
                         print(f"`✅ Unbanned chat: [{name}]`")
-                        rep.reply(page=page, locator=message, text=f"`Unbanned chat: [{name}]`")
+                        rep.reply(page=page, element=message, text=f"`Unbanned chat: [{name}]`")
                         check = True
                     else:
                         print(f"Chat[{name}] with GID[{GID}] is not in ban list.")
-                        rep.reply(page=page, locator=message,
+                        rep.reply(page=page, element=message,
                                   text=f"`Chat[{name}] with GID[{GID}] is not in ban list.`")
                     return
 
@@ -243,10 +241,10 @@ def _auth_handle(Locator_message: Union[ElementHandle,Locator], text: str, Locat
                         helper.react(page=page, message=message)
                         _.ban_list.append(GID)
                         print(f"`chat is banned now : [{name}]`")
-                        rep.reply(page=page, locator=message, text=f"`chat is banned now : [{name}]`")
+                        rep.reply(page=page, element=message, text=f"`chat is banned now : [{name}]`")
                         check = True
                     else:
-                        rep.reply(page=page, locator=message, text=f"`[{name}] is already in ban list.`")
+                        rep.reply(page=page, element=message, text=f"`[{name}] is already in ban list.`")
                     return
 
             if GID in _.ban_list:
@@ -273,7 +271,7 @@ def _auth_handle(Locator_message: Union[ElementHandle,Locator], text: str, Locat
                 _process_cmd(message=message, text=text)
             else:
                 print(f"Unauthorized command '{t}' from {sender}")
-                rep.reply(page=page, locator=message, text=f"Unauthorized command '{t}' from {sender}")
+                rep.reply(page=page, element=message, text=f"Unauthorized command '{t}' from {sender}")
 
         try:
             cmd_exec()
@@ -285,7 +283,7 @@ def _auth_handle(Locator_message: Union[ElementHandle,Locator], text: str, Locat
     except Exception as e:
         print(f"⚠️ Error in _auth_handle(): {e}")
         try:
-            rep.reply(page=page, locator=message, text="⚠️ Internal error occurred while processing.")
+            rep.reply(page=page, element=message, text="⚠️ Internal error occurred while processing.")
         except Exception as inner_e:
             print(f"⚠️ Failed to reply to error: {inner_e}")
 
@@ -298,23 +296,23 @@ def _Admin_Process(message: ElementHandle, fun_name: str) -> None:
         if fun_name == "pause_on":
             pause_mode = True
             print("Pause Enabled ✅")
-            rep.reply(page=page, locator=message, text="Pause Enabled ✅")
+            rep.reply(page=page, element=message, text="Pause Enabled ✅")
 
         elif fun_name == "pause_off":
             pause_mode = False
             print("Pause Disabled ❌")
-            rep.reply(page=page, locator=message, text="Pause Disabled ❌")
+            rep.reply(page=page, element=message, text="Pause Disabled ❌")
 
         elif fun_name == "pause_show":
             print(f"Pause Status: {'ON' if pause_mode else 'OFF'}")
-            rep.reply(page=page, locator=message, text=f"Pause Status: `{'ON' if pause_mode else 'OFF'}`")
+            rep.reply(page=page, element=message, text=f"Pause Status: `{'ON' if pause_mode else 'OFF'}`")
 
         else:
             _process_cmd(message, fun_name)
 
     except Exception as e:
         print(f"[Admin_Process Error] {e}")
-        rep.reply(page=page, locator=message, text=f"❗ Error in admin command:\n`{e}`")
+        rep.reply(page=page, element=message, text=f"❗ Error in admin command:\n`{e}`")
 
 
 def _process_cmd(message: ElementHandle, text: str) -> None:
@@ -322,7 +320,7 @@ def _process_cmd(message: ElementHandle, text: str) -> None:
         helper.react(message=message, page=page)
     try:
         if text == "...help":
-            rep.reply(page=page, locator=message, text=helper.menu.menu())
+            rep.reply(page=page, element=message, text=helper.menu.menu())
 
         elif text == "showq":
             helper.showq(page=page, locator=message)
@@ -335,7 +333,7 @@ def _process_cmd(message: ElementHandle, text: str) -> None:
 
     except Exception as e:
         print(f"[Process_Cmd Error] {e}")
-        rep.reply(page=page, locator=message, text=f"❗ Error in command:\n`{e}`")
+        rep.reply(page=page, element=message, text=f"❗ Error in command:\n`{e}`")
 
 
 def _natural_cmd(message: ElementHandle, text: str) -> None:
@@ -351,17 +349,17 @@ def _natural_cmd(message: ElementHandle, text: str) -> None:
 
         if len(parts) < 2:
             print("Not Correct Command. Usage: /quant <f_name> [f_info]")
-            rep.reply(page=page, locator=message, text="❗ Usage: /quant <f_name> [f_info]")
+            rep.reply(page=page, element=message, text="❗ Usage: /quant <f_name> [f_info]")
             return
 
         f_name = parts[1].lower().strip()
         f_info = parts[2].strip() if len(parts) > 2 else ""
 
-        process.post_process(page=page, message=message, f_name=f_name, f_info=f_info)
+        process.Agent_Commands(page=page, message=message, f_name=f_name, f_info=f_info)
 
     except Exception as e:
         print(f"[Natural_Cmd Error] {e}")
-        rep.reply(page=page, locator=message, text=f"❗ Natural command error:\n`{e}`")
+        rep.reply(page=page, element=message, text=f"❗ Natural command error:\n`{e}`")
 
 
 def Time() -> str: return datetime.now().strftime("%-I : %M:%S %p").lower()
@@ -373,7 +371,7 @@ def PersonalChatCheck(chat: Locator) -> bool:
         you = chat.get_by_role("gridcell").get_by_text("(You)", exact=True)
 
         if you.is_visible():
-            chat.click(timeout=random.randint(1801,2001))
+            chat.click(timeout=2000)
             messages = sc.messages(page=page)
             message = messages.nth(0).element_handle(timeout=1001)  # Any message can define the authentication
 

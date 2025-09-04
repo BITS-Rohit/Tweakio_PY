@@ -24,13 +24,13 @@ pool = [
     "menu"
 ]
 
-def post_process(page: Page, message: Locator, f_name: str, f_info: str):
+def Agent_Commands(page: Page, message: Locator, f_name: str, f_info: str):
     text = f"Unknown command: [{f_name}]"
     helper.react(message=message, page=page)
 
     if f_name not in pool:
         print(text)
-        rep.reply(page=page, locator=message, text=f"`{text}`" + f"`Re-try with right cmd in the pool.` \n `[{pool}]`")
+        rep.reply(page=page, element=message, text=f"`{text}`" + f"`Re-try with right cmd in the pool.` \n `[{pool}]`")
 
     # ---- Methods Implementation --- #
     match f_name:

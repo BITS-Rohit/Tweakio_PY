@@ -35,7 +35,7 @@ def MessageToChat(page: Page) -> None:
 
     mess = sc.message_box(page)
     if mess is None:
-        print("messages locator is Emptyr")
+        print("messages locator is Empty")
         return
 
     # ha.move_mouse_to_locator(page, mess)
@@ -118,26 +118,26 @@ def get_mess_type(message: Union[ElementHandle, Locator]) -> str:
     if isinstance(message, Locator): message = message.element_handle(timeout=1001)
     try:
         try:
-            if sc.pic_handle(message):
-                return "image"
-        except Exception as e:
-            print(f"Error checking image: {e}")
-
-        try:
             if sc.isVideo(message):
-                return "video"
+                return "video Message"
         except Exception as e:
             print(f"Error checking video: {e}")
 
         try:
+            if sc.pic_handle(message):
+                return "image Message"
+        except Exception as e:
+            print(f"Error checking image: {e}")
+
+        try:
             if sc.is_Voice_Message(message):
-                return "audio"
+                return "Voice Message"
         except Exception as e:
             print(f"Error checking audio: {e}")
 
         try:
             if sc.is_gif(message):
-                return "gif"
+                return "gif Message"
         except Exception as e:
             print(f"Error checking gif: {e}")
 
@@ -148,7 +148,8 @@ def get_mess_type(message: Union[ElementHandle, Locator]) -> str:
             print(f"Error checking sticker: {e}")
 
         try:
-            if sc.isQuotedText(message).is_visible():
+            q = sc.isQuotedText(message)
+            if q and q.is_visible():
                 return "quoted"
         except Exception as e:
             print(f"Error checking quoted text: {e}")
@@ -180,6 +181,7 @@ def get_Timestamp(message: Union[ElementHandle, Locator]) -> str:
 def trace_message(seen_messages: dict, chat: Union[ElementHandle, Locator],
                   message: Union[ElementHandle, Locator]) -> None:
     """Tracks a unique message and stores its details if not already seen."""
+    # Till now, we are here incoming the Locator.
     try:
         data_id = sc.get_dataID(message)
         if data_id in seen_messages:
@@ -188,7 +190,7 @@ def trace_message(seen_messages: dict, chat: Union[ElementHandle, Locator],
         seen_messages[data_id] = {
             "chat": sc.getChatName(chat),
             "community": sc.is_community(chat),
-            "preview_url": sc.getChat_lowImg(chat),
+            "preview_url": sc.getChat_low_Quality_Img(chat),
             "jid": getJID_mess(message),
             "message": sc.get_message_text(message),
             "sender": getSenderID(message),
@@ -275,12 +277,12 @@ def pick_adminList() -> list:
 
 
 # --- ---- Unread Handle ---- ---
-def is_unread(chat : Union[ElementHandle,Locator]) -> int:
+def is_unread(chat: Union[ElementHandle, Locator]) -> int:
     """
     Return 1 if the chat has actual unread messages (with a numeric count),
     else 0 if only marked as unread manually (no numeric badge).
     """
-    if isinstance(chat , Locator): chat = chat.element_handle(timeout=1001)
+    if isinstance(chat, Locator): chat = chat.element_handle(timeout=1001)
     try:
         unread_badge = chat.query_selector("[aria-label*='unread']")
         if unread_badge:
@@ -294,11 +296,11 @@ def is_unread(chat : Union[ElementHandle,Locator]) -> int:
         return 0
 
 
-def do_unread(page: Page, chat : Union[ElementHandle,Locator]) -> None:
+def do_unread(page: Page, chat: Union[ElementHandle, Locator]) -> None:
     """
     Marks the given chat as unread by simulating right-click and selecting 'Mark as unread'.
     """
-    if isinstance(chat , Locator): chat = chat.element_handle(timeout=1001)
+    if isinstance(chat, Locator): chat = chat.element_handle(timeout=1001)
     try:
         # ha.move_mouse_to_locator(page, chat)
         chat.click(button="right")
@@ -311,7 +313,7 @@ def do_unread(page: Page, chat : Union[ElementHandle,Locator]) -> None:
         unread_option = app_menu.query_selector("li span:text-matches('mark as unread', 'i')")
         if unread_option:
             # ha.move_mouse_to_locator(page, unread_option)
-            unread_option.click(timeout=random.randint(1701,2001))
+            unread_option.click(timeout=random.randint(1701, 2001))
         else:
             raise Exception("'Mark as unread' option not found or not visible")
 
@@ -344,7 +346,8 @@ def cleanFolder(folder: pa.Path) -> None:
             except Exception as e:
                 print(f"⚠️ Could not delete {item}: {e}")
 
-def get_LocatorBack(page : Page , element :ElementHandle) -> Locator:
+
+def get_LocatorBack(page: Page, element: ElementHandle) -> Locator:
     """
     Returns a locator with unique css extracted from the element Handle
     :param page:

@@ -29,6 +29,3 @@ def load() -> None:
     print("#=== Seen IDS loaded ===#")
     if SETTINGS.DEBUG : print(seen_ids)
 
-
-
-

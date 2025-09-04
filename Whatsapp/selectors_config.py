@@ -6,9 +6,10 @@ Conventions:
 - All other elements returned are of the type `Locator`.
 - Utility functions are written to extract attributes or recognize content like images, videos, or quoted messages.
 """
+import re
 from typing import Union
 
-from playwright.sync_api import Locator, ElementHandle, Page
+from playwright.sync_api import ElementHandle, Locator, Page
 
 
 def chat_list(page: Page) -> Locator:
@@ -33,7 +34,7 @@ def searchBox_chatList_panel(page: Page) -> Locator:
 
 def message_box(page: Page) -> Locator:
     """Message Input box on the message panel"""
-    return page.get_by_role("textbox", name=re.compile("type a message", re.I))
+    return page.locator("footer").get_by_role("textbox").first
 
 
 def wa_icon(page: Page) -> Locator:
@@ -71,44 +72,41 @@ def chat_items(page: Page) -> Locator:
     return chat_list(page).get_by_role("listitem")
 
 
-def getChat_lowImg(chat: Union[ElementHandle,Locator]) -> str:
+def getChat_low_Quality_Img(chat: Union[ElementHandle, Locator]) -> str:
     """Extracts the low-quality image (thumbnail) from a chat preview item."""
-    if isinstance(chat,Locator): chat = chat.element_handle(timeout=1001)
-    group_icon = chat.query_selector("span[data-icon='default-group-refreshed']")
-    if group_icon and group_icon.is_visible():
-        return "Default group icon"
-
-    img_el = chat.query_selector("img")
+    if isinstance(chat, Locator): chat = chat.element_handle(timeout=1001)
+    img_el = chat.query_selector_all("img[src]")[0]
     if img_el and img_el.is_visible():
         return img_el.get_attribute("src")
-
     return ""
 
 
-def getChatName(chat: Union[ElementHandle,Locator]) -> str:
+def getChatName(chat: Union[ElementHandle, Locator]) -> str:
     """Returns the primary chat name (first span[title]) or empty string."""
-    if isinstance(chat , Locator): chat = chat.element_handle(timeout=1001)
+    if isinstance(chat, Locator): chat = chat.element_handle(timeout=1001)
+    if is_community(chat):
+        return chat.query_selector_all("span[title]")[1].get_attribute("title") or ""
     span = chat.query_selector("span[title]")
     if span:
         return span.get_attribute("title") or ""
     return ""
 
 
-def is_community(chat: Union[ElementHandle,Locator]) -> str:
+def is_community(chat: Union[ElementHandle, Locator]) -> str:
     """
     If this chat item has the 'default-community-refreshed' icon,
     return the community name (the span[title] without a data-icon).
     """
-    if isinstance(chat, Locator):chat = chat.element_handle(timeout=1001)
+    if isinstance(chat, Locator): chat = chat.element_handle(timeout=1001)
+
     icon = chat.query_selector("span[data-icon='default-community-refreshed']")
     if icon and icon.is_visible():
-        # pick the first title‐span that does NOT have a data-icon
-        name_span = chat.query_selector("span[title]:not([data-icon])")
-        return name_span.get_attribute("title") if name_span else ""
+        name_span = chat.query_selector_all("span[title]")
+        return name_span[0].get_attribute("title") if name_span else ""
     return ""
 
 
-def Profile_header(page: 'Page') -> 'Locator':
+def Profile_header(page: Page) -> Locator:
     """
     Returns the profile header button locator used to open contact details.
     Used when a chat is opened and the top bar includes profile/name/media access.
@@ -116,36 +114,36 @@ def Profile_header(page: 'Page') -> 'Locator':
     return page.locator("header").get_by_role("button", name=re.compile("profile details", re.I))
 
 
-def qr_canvas(page: 'Page') -> 'Locator':
+def qr_canvas(page: Page) -> Locator:
     """Returns the QR canvas image for login."""
     return page.get_by_role("img", name=re.compile(r"scan.*qr", re.I))
 
 
 # -------------------- Sidebar Navigation -------------------- #
 
-def _side_Bar_chats(page: 'Page') -> 'Locator':
+def _side_Bar_chats(page: Page) -> Locator:
     """Returns the sidebar button locator for 'Chats'."""
     return page.locator("header").first.get_by_role("button", name=re.compile("chats", re.I))
 
 
-def _side_Bar_status(page: 'Page') -> 'Locator':
+def _side_Bar_status(page: Page) -> Locator:
     """Returns the sidebar button locator for 'Status Updates'."""
     return page.locator("header").first.get_by_role("button", name=re.compile("updates in status", re.I))
 
 
-def _side_Bar_channels(page: 'Page') -> 'Locator':
+def _side_Bar_channels(page: Page) -> Locator:
     """Returns the sidebar button locator for 'Channels'."""
     return page.locator("header").first.get_by_role("button", name=re.compile("channels", re.I))
 
 
-def _side_Bar_Communities(page: 'Page') -> 'Locator':
+def _side_Bar_Communities(page: Page) -> Locator:
     """Returns the sidebar button locator for 'Communities'."""
     return page.locator("header").first.get_by_role("button", name=re.compile("communities", re.I))
 
 
 # -------------------- Messages Section -------------------- #
 
-def messages(page: 'Page') -> Locator:
+def messages(page: Page) -> Locator:
     """
     Returns a locator for all messages in the current open chat.
     Each message element has a unique `data-id` and role "row".
@@ -153,17 +151,17 @@ def messages(page: 'Page') -> Locator:
     return page.locator('[role="row"] div[data-id]')
 
 
-def messages_incoming(page: 'Page') -> 'Locator':
+def messages_incoming(page: Page) -> Locator:
     """Filter for the personal | group chat incoming messages"""
     return page.locator('[role="row"] div[data-id] .message-in')
 
 
-def messages_outgoing(page: 'Page') -> 'Locator':
+def messages_outgoing(page: Page) -> Locator:
     """Filter for the personal | group chat outgoing messages"""
     return page.locator('[role="row"] div[data-id] .message-out')
 
 
-def get_message_text(message_element: Union['ElementHandle', 'Locator']) -> str:
+def get_message_text(message_element: Union[ElementHandle, Locator]) -> str:
     """Returns the text content of a message if visible."""
     if isinstance(message_element, Locator): message_element = message_element.element_handle()
     span = message_element.query_selector("span.selectable-text.copyable-text")
@@ -187,58 +185,58 @@ def get_dataID(message: Union[ElementHandle, Locator]) -> str:
 
 
 # -------------------- Media Send  -------------------- #
-def plus_rounded_icon(page: 'Page') -> 'Locator':
+def plus_rounded_icon(page: Page) -> Locator:
     """
     It is a locator for the plus icon in the message box for opening menu with options like : image , videos ,documents to send
     :param page:
     :return:
     """
-    return page.locator("button >> span[data-icon='plus-rounded']")
+    return page.get_by_role("button").locator("span[data-icon]").filter(has_text=re.compile("plus-rounded", re.I)).first
 
 
-def document(page: 'Page') -> 'Locator':
+def document(page: Page) -> Locator:
     """Safely locates the 'Document' upload option in the menu"""
     return page.get_by_role("button", name="Document").first
 
 
-def photos_videos(page: 'Page') -> 'Locator':
+def photos_videos(page: Page) -> Locator:
     """Safely locates the 'Photos & videos' upload option in the menu"""
     return page.get_by_role("button", name="Photos & videos").first
 
 
-def camera(page: 'Page') -> 'Locator':
+def camera(page: Page) -> Locator:
     """Safely locates the 'Camera' upload option in the menu"""
     return page.get_by_role("button", name="Camera").first
 
 
-def audio(page: 'Page') -> 'Locator':
+def audio(page: Page) -> Locator:
     """Safely locates the 'Audio' upload option in the menu"""
     return page.get_by_role("button", name="Audio").first
 
 
-def contact(page: 'Page') -> 'Locator':
+def contact(page: Page) -> Locator:
     """Safely locates the 'Contact' upload option in the menu"""
     return page.get_by_role("button", name="Contact").first
 
 
-def poll(page: 'Page') -> 'Locator':
+def poll(page: Page) -> Locator:
     """Safely locates the 'Poll' upload option in the menu"""
     return page.get_by_role("button", name="Poll").first
 
 
-def event(page: 'Page') -> 'Locator':
+def event(page: Page) -> Locator:
     """Safely locates the 'Event' upload option in the menu"""
     return page.get_by_role("button", name="Event").first
 
 
-def new_sticker(page: 'Page') -> 'Locator':
+def new_sticker(page: Page) -> Locator:
     """Safely locates the 'New sticker' upload option in the menu"""
     return page.get_by_role("button", name="New sticker")
 
 
 # -------------------- Message Type Checkers -------------------- #
 
-def get_mess_pic_url(message: 'ElementHandle') -> str:
+def get_mess_pic_url(message: ElementHandle) -> str:
     """Extracts the image URL from an incoming picture message if visible."""
     img_el = message.query_selector("img")
     if img_el:
@@ -246,7 +244,7 @@ def get_mess_pic_url(message: 'ElementHandle') -> str:
     return ""
 
 
-def isReacted(message: Union[ElementHandle,Locator]) -> bool:
+def isReacted(message: Union[ElementHandle, Locator]) -> bool:
     """Check if the message is reacted or not"""
     try:
         if isinstance(message, Locator): message = message.element_handle(timeout=1001)
@@ -256,126 +254,107 @@ def isReacted(message: Union[ElementHandle,Locator]) -> bool:
         return False
 
 
-def pic_handle(message: 'ElementHandle') -> bool:
+def pic_handle(message: ElementHandle) -> bool:
     pic = message.query_selector(
-        "xpath=.//div[@role='button' and translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='open picture']//img"
+        "xpath=.//div[@role='button' and "
+        "translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='open picture']//img"
     )
-    return pic.is_visible() if pic else False
+    if pic and pic.is_visible():
+        return True
+    pic2 = message.query_selector("xpath=.//img[contains(@src,'data:image/')]")
+    return pic2.is_visible() if pic2 else False
 
 
-def isVideo(message: 'ElementHandle') -> bool:
-    """
-    Check if a WhatsApp message DOM element (ElementHandle) is a video.
-    Supports aria-hidden="true" icons.
-    """
-    return message.query_selector("div[role='button']").query_selector(
-        "span[data-icon='media-play'],span[data-icon='msg-video']").is_visible()
+def isVideo(message: ElementHandle) -> bool:
+    video = message.query_selector(
+        "xpath=.//span[@data-icon='media-play' or @data-icon='msg-video']"
+    )
+    return video.is_visible() if video else False
 
 
-def is_Voice_Message(message: 'ElementHandle') -> bool:
+def is_Voice_Message(message: ElementHandle) -> bool:
     voice = message.query_selector(
         "xpath=.//button[contains(translate(@aria-label,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'voice message')]"
     )
-    return voice.is_visible() if voice else False
+    if voice and voice.is_visible():
+        return True
+    voice2 = message.query_selector(
+        "xpath=.//span[contains(translate(@data-icon,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'audio-play')]"
+    )
+    return voice2.is_visible() if voice2 else False
 
 
-import re
-
-
-def is_gif(message: 'ElementHandle') -> 'ElementHandle':
-    """
-    Checks if the WhatsApp message ElementHandle is a GIF message.
-
-    :param message: Playwright ElementHandle pointing to the message element
-    :return: The button element if it's a GIF, else None
-    """
-    # This matches a <div> with role="button" and aria-label containing "Play GIF" (the standard WhatsApp GIF UI)
+def is_gif(message: ElementHandle) -> bool:
     gif_btn = message.query_selector(
-        "xpath=.//div[@role='button' and contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'play gif')]"
+        "xpath=.//div[@role='button' and "
+        "contains(translate(@aria-label,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'play gif')]"
     )
     if gif_btn and gif_btn.is_visible():
-        return gif_btn
-    return None
-
-
-def is_animated_sticker(message: 'ElementHandle') -> 'ElementHandle':
-    """
-    Returns handle if an animated sticker is present in the message using XPath.
-
-    :param message: Playwright ElementHandle representing a WhatsApp message element
-    :return: ElementHandle of the sticker container if animated sticker exists, else None
-    """
-    xpath = (
-        ".//div[@role='button' and contains(translate(@aria-label, "
-        "'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'sticker')]"
-        "//img[contains(@src,'blob:')]/following-sibling::canvas"
+        return True
+    gif2 = message.query_selector(
+        "xpath=.//span[contains(translate(@data-icon,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'media-gif')]"
     )
-    animated_canvas = message.query_selector(f"xpath={xpath}")
-    if animated_canvas and animated_canvas.is_visible():
-        return animated_canvas
-    return None
+    return gif2.is_visible() if gif2 else False
 
 
-def is_plain_sticker(message: 'ElementHandle') -> 'ElementHandle':
+def is_animated_sticker(message: ElementHandle) -> bool:
     """
-    Returns the handle if a static sticker image is present using XPath.
-    Matches sticker buttons containing 'Sticker' in aria-label and a blob: image.
+    Animated stickers typically have <img alt="Sticker"> with dynamic alt text.
     """
-    return message.query_selector(
-        "xpath=.//button[img[contains(@src,'blob:')] and (@aria-label='Sticker with no label' or contains(@aria-label,'Sticker'))]"
+    sticker = message.query_selector(
+        "xpath=.//img[contains(translate(@alt,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'animated sticker')]"
     )
+    return sticker.is_visible() if sticker else False
 
 
-def is_lottie_animation_sticker(message: 'ElementHandle') -> 'ElementHandle':
+def is_plain_sticker(message: ElementHandle) -> bool:
     """
-    Checks if a Lottie/SVG sticker animation is present in a WhatsApp Web message.
-    Returns the <svg> element if found, else None.
+    Plain/static sticker detection via <img alt="Sticker with no label">.
     """
-    # Limit search to sticker container area to avoid matching other small SVG icons
-    xpath = (
-        ".//div[@role='button' and "
-        "contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'), 'sticker')]"
-        "//svg"
+    sticker = message.query_selector(
+        "xpath=.//img[contains(translate(@alt,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'sticker with no label')]"
     )
-    el = message.query_selector(f"xpath={xpath}")
-    if el and el.is_visible():
-        return el
-    return None
+    return sticker.is_visible() if sticker else False
 
 
-def isSticker(message: 'ElementHandle') -> bool:
+def is_lottie_animation_sticker(message: ElementHandle) -> bool:
+    """
+    Lottie/SVG sticker detection (<svg> or <img src="blob:"> inside sticker button).
+    """
+    el = message.query_selector(
+        "xpath=.//button[contains(translate(@aria-label,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'sticker')]//img[contains(@src,'blob:')]"
+    )
+    return el.is_visible() if el else False
+
+
+def isSticker(message: ElementHandle) -> bool:
     """Returns True if any sticker type is detected using XPath."""
-    return any([
-        (el := is_animated_sticker(message)) and el.is_visible(),
-        (el := is_lottie_animation_sticker(message)) and el.is_visible(),
-        (el := is_plain_sticker(message)) and el.is_visible()
-    ])
+    return is_animated_sticker(message) or is_plain_sticker(message) or is_lottie_animation_sticker(message)
 
 
 # -------------------- Quoted Message Utilities -------------------- #
 
-def isQuotedText(message: 'ElementHandle') -> 'ElementHandle':
+def isQuotedText(message: ElementHandle) -> ElementHandle:
     """
     Checks if a message is quoting another and returns the quoted‑message button handle.
     Matches any div with a data-pre-plain-text attribute, then its button labeled "Quoted message".
     """
-    return message.query_selector("div[data-pre-plain-text]").query_selector(
-        "div[role='button'] >> span.quoted-mention")
+    return message.query_selector("span.quoted-mention")
 
 
-def get_QuotedText_handle(message: 'ElementHandle') -> str:
+def get_QuotedText_handle(message: ElementHandle) -> str:
     """Returns the handle for the quoted-mention span inside a quoted message."""
     return isQuotedText(message).is_visible() or ""
 
 
 # -- System -- #
 
-def startup_popup_locator(page: 'Page') -> 'Locator':
+def startup_popup_locator(page: Page) -> Locator:
     """Returns the startup continue popup button locator."""
     return page.get_by_role("button", name=re.compile("continue", re.I))
 
 
-def popup2(page: 'Page'):
+def popup2(page: Page):
     """
     2nd Pop up of WhatsApp with message:
     "Your chats and calls are private"
@@ -403,50 +382,36 @@ Options :
 """
 
 
-def group_info(page: 'Page') -> 'ElementHandle':
+def group_info(page: Page) -> ElementHandle | None:
     dialog = page.query_selector("div[role='dialog']")
-    if not dialog:
-        return None
-    return dialog.query_selector("li:has-text('group info')")
+    return dialog.query_selector("li:has-text('group info')") if dialog else None
 
 
-def select_messages(page: 'Page') -> 'ElementHandle':
+def select_messages(page: Page) -> ElementHandle | None:
     dialog = page.query_selector("div[role='dialog']")
-    if not dialog:
-        return None
-    return dialog.query_selector("li:has-text('select messages')")
+    return dialog.query_selector("li:has-text('select messages')") if dialog else None
 
 
-def mute_notifications(page: 'Page') -> 'ElementHandle':
+def mute_notifications(page: Page) -> ElementHandle | None:
     dialog = page.query_selector("div[role='dialog']")
-    if not dialog:
-        return None
-    return dialog.query_selector("li:has-text('mute notifications')")
+    return dialog.query_selector("li:has-text('mute notifications')") if dialog else None
 
 
-def disappearing_messages(page: 'Page') -> 'ElementHandle':
+def disappearing_messages(page: Page) -> ElementHandle | None:
     dialog = page.query_selector("div[role='dialog']")
-    if not dialog:
-        return None
-    return dialog.query_selector("li:has-text('disappearing messages')")
+    return dialog.query_selector("li:has-text('disappearing messages')") if dialog else None
 
 
-def add_to_fav(page: 'Page') -> 'ElementHandle':
+def add_to_fav(page: Page) -> ElementHandle | None:
     dialog = page.query_selector("div[role='dialog']")
-    if not dialog:
-        return None
-    return dialog.query_selector("li:has-text('add to favourites')")
+    return dialog.query_selector("li:has-text('add to favourites')") if dialog else None
 
 
-def close_chat(page: 'Page') -> 'ElementHandle':
+def close_chat(page: Page) -> ElementHandle | None:
     dialog = page.query_selector("div[role='dialog']")
-    if not dialog:
-        return None
-    return dialog.query_selector("li:has-text('close chat')")
+    return dialog.query_selector("li:has-text('close chat')") if dialog else None
 
 
-def clear_chat(page: 'Page') -> 'ElementHandle':
+def clear_chat(page: Page) -> ElementHandle | None:
     dialog = page.query_selector("div[role='dialog']")
-    if not dialog:
-        return None
-    return dialog.query_selector("li:has-text('clear chat')")
+    return dialog.query_selector("li:has-text('clear chat')") if dialog else None
