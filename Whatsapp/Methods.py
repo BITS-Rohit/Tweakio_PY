@@ -6,7 +6,7 @@ from typing import Union
 
 from playwright.sync_api import Page, ElementHandle, Locator
 
-from Langchain_AI import run_gemini
+from Langchain_AI import run_AI
 from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
                       selectors_config as sc)
 from Whatsapp.selectors_config import isReacted
