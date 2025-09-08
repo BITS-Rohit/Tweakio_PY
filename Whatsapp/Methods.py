@@ -12,7 +12,7 @@ from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___
 from Whatsapp.selectors_config import isReacted
 
 # ----------------
-gemini = run_gemini.Gemini()
+gemini = run_AI.Gemini()
 
 
 # ----------------
