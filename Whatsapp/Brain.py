@@ -150,7 +150,8 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
         print(f"Error in check messages : {e}")
 
 
-def _auth_handle(page : Page,Locator_message: Union[ElementHandle, Locator], text: str, Locator_chat: Union[ElementHandle, Locator],
+def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], text: str,
+                 Locator_chat: Union[ElementHandle, Locator],
                  p_chat: bool = False) -> None:  # change
     message: ElementHandle = None
     try:
@@ -201,7 +202,7 @@ def _auth_handle(page : Page,Locator_message: Union[ElementHandle, Locator], tex
             page.wait_for_timeout(timeout=random.randint(300, 500))
             attempts += 1
 
-        if message.bounding_box() is None:message.scroll_into_view_if_needed(timeout=2000)
+        if message.bounding_box() is None: message.scroll_into_view_if_needed(timeout=2000)
 
         pause_handle(p_auth=Admin_AUTH, t=t, sender=sender, text=text, message=message)
 

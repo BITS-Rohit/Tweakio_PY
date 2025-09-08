@@ -169,6 +169,9 @@ def get_message_text(message_element: Union[ElementHandle, Locator]) -> str:
         return span.text_content() or ""
     return ""
 
+# def get_message_text(element: Locator | ElementHandle) -> str:
+#     return element.inner_text().strip()
+
 
 def is_message_out(message: Union[ElementHandle, Locator]) -> bool:
     """Returns True if the message is outgoing (sent by bot)."""
