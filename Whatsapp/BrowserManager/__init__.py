@@ -90,8 +90,8 @@ def close_browser() -> None:
     if BrowserContextInstance:
         BrowserContextInstance.close()
 
-if __name__ == "__main__":
-    page = getPage()
-    page.goto("https://web.whatsapp.com")
-    time.sleep(2000)
-
+# if __name__ == "__main__":
+#     page = getPage()
+#     page.goto("https://web.whatsapp.com")
+#     time.sleep(2000)
+#
