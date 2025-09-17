@@ -345,7 +345,7 @@ def react(message: Union[ElementHandle, Locator], page: Page, tries: int = 0) ->
         page.wait_for_timeout(500)
 
         try :
-            emoji = page.get_by_role("button").locator("img[alt='👍']").last
+            emoji = page.get_by_role("dialog").get_by_role("button").locator("img[alt='👍']").last
             if not emoji:
                 print("dialog not visible")
             else:

@@ -87,7 +87,7 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
         print(f"Opening Top chat [no - {y}] with name -  {name} ")
         # ha.move_mouse_to_locator(page, chat)
         print("--Top chat has new messages--")
-        chat.click(timeout=2000)
+        chat.click(timeout=3000)
         try:
             print("<><><><><><><><><><><><><><>")
 
@@ -372,7 +372,7 @@ def PersonalChatCheck(chat: Locator) -> bool:
         you = chat.get_by_role("gridcell").get_by_text("(You)", exact=True)
 
         if you.is_visible():
-            chat.click(timeout=2000)
+            chat.click(timeout=3000)
             messages = sc.messages(page=page)
             message = messages.nth(0).element_handle(timeout=1001)  # Any message can define the authentication
 
