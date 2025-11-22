@@ -19,7 +19,7 @@ addons = [
     "/home/radheradhe/Desktop/Camoufox_addons/youtube_high_definition-118.0.9"
 ]
 
-BrowserContextInstance: BrowserContext = None
+BrowserContextInstance: BrowserContext
 pageManager = []
 fg = None
 traces_dir = dirs.getTraceDir()

@@ -71,7 +71,8 @@ def chat_items(page: Page) -> Locator:
     base_list = chat_list(page)
     list_items = base_list.get_by_role("listitem")
     rows = base_list.get_by_role("row")
-    return list_items.or_(rows)
+    if list_items.count()>0 :return list_items;
+    return rows
 
 def getChat_low_Quality_Img(chat: Union[ElementHandle, Locator]) -> str:
     """Extracts the low-quality image (thumbnail) from a chat preview item."""

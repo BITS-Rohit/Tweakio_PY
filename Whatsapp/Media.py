@@ -76,7 +76,7 @@ def InjectMedia(page: Page, files: list[str], mediatype: str = "doc") -> None:
 
 def AddMedia(page: Page, file: str, mediatype: str = "doc") -> None:
     """
-    this adds an image to the message box , only images
+    this adds an image, voice (mp3) to the message box , only images
     :param page:
     :param file:
     :param mediatype:

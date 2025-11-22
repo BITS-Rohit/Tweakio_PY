@@ -321,17 +321,16 @@ def do_unread(page: Page, chat: Union[ElementHandle, Locator]) -> None:
     """
     if isinstance(chat, Locator): chat = chat.element_handle(timeout=1001)
     try:
-        # ha.move_mouse_to_locator(page, chat)
         chat.click(button="right")
         time.sleep(random.uniform(1.3, 2.5))
 
-        app_menu = page.query_selector("role=application")  # top-level menu
+        app_menu = page.query_selector("role=application")
         if not app_menu:
             raise Exception("Application menu not found")
 
         unread_option = app_menu.query_selector("li span:text-matches('mark as unread', 'i')")
         if unread_option:
-            unread_option.click(timeout=random.randint(1701, 2001))
+            unread_option.click(timeout=3000)
         else:
             raise Exception("'Mark as unread' option not found or not visible")
 
