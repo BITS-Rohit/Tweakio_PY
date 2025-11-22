@@ -15,8 +15,6 @@ refreshTime = SETTINGS.REFRESH_TIME
 pause_mode = False
 page : Page
 detect = True
-
-
 # ----------------------------------------------------------------------------------------------------------------------
 
 def Start_Handling(p: Page) -> None:
@@ -56,20 +54,19 @@ def Start_Handling(p: Page) -> None:
             print(f"Max chat checking : {_range_}")
 
             cycle += 1
-
             y = 1
+
             for i in range(_range_):
                 chat = chats.nth(i)
                 _check_messages(chat, y)  # Pass as Locator to avoid Stale Pointers
                 y += 1
-                time.sleep(random.uniform(0.87, 1.98))
+                time.sleep(random.uniform(1.23, 2.22))
 
     except Exception as e:
         print(f"Handle chats error: {e}")
 
 
-def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # change
-
+def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:
     admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
                   SETTINGS.NLP, SETTINGS.QUANTIFIER, "--ban--", "--unban--"]
     try:
@@ -85,7 +82,6 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
                 return
 
         print(f"Opening Top chat [no - {y}] with name -  {name} ")
-        # ha.move_mouse_to_locator(page, chat)
         print("--Top chat has new messages--")
         chat.click(timeout=3000)
         try:
@@ -100,10 +96,11 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
             # get last message ID
             last_ID = sc.get_dataID(messages.nth(n - 1).element_handle(timeout=1000))
             if not last_ID:
-                raise Exception("Data ID is not correct in last message // Brain // check messages")
+                raise Exception("Data ID is not init in last message // Brain // check messages")
 
             # live loop
-            while True:
+            Loop_Idx = 0
+            while Loop_Idx< 5:
                 print(f"Total messages fetched : {n}")
 
                 for i in range(n):
@@ -120,10 +117,11 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
                         text=text,
                         Locator_chat=chat,
                         p_chat=Personal_auth,
-
                     )
 
                 # refresh messages
+                time.sleep(random.uniform(0.5 , 1.2)) # Refresh Time
+
                 messages = sc.messages(page)
                 current_last_id = sc.get_dataID(messages.nth(n - 1).element_handle(timeout=1000))
 
@@ -136,6 +134,7 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
                 # update last_ID + message count for next iteration
                 last_ID = current_last_id
                 n = messages.count()
+                Loop_Idx+=1
 
             print("<><><><><><><><><><><><><><>")
 
@@ -153,8 +152,10 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
 
 def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], text: str,
                  Locator_chat: Union[ElementHandle, Locator],
-                 p_chat: bool = False) -> None:  # change
-    message: ElementHandle
+                 p_chat: bool = False) -> None:
+
+    message: Optional[ElementHandle] = None
+
     try:
         if isinstance(Locator_message, Locator):
             message = Locator_message.element_handle()
@@ -203,16 +204,18 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
             page.wait_for_timeout(timeout=random.randint(300, 500))
             attempts += 1
 
-        if message.bounding_box() is None: message.scroll_into_view_if_needed(timeout=2000)
+        if message.bounding_box() is None:
+            message.scroll_into_view_if_needed(timeout=2000)
 
         pause_handle(p_auth=Admin_AUTH, t=t, sender=sender, text=text, message=message)
 
         check = False
 
-        def Ban_Handle():
+        def Ban_Handle(message: Union[ElementHandle, Locator]):
             nonlocal check
             GID = ex.getGID_CID(message)
-            if p_chat: GID = "personal Chat"
+            if p_chat:
+                GID = "personal Chat"
             if Admin_AUTH and t in ["--ban--", "--unban--"]:
                 if not GID:
                     print("Error: Chat name is empty during ban/unban check.")
@@ -233,7 +236,6 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
                         rep.reply(page=page, element=message, text=f"`Unbanned chat: [{name}]`")
                         check = True
                     else:
-                        print(f"Chat[{name}] with GID[{GID}] is not in ban list.")
                         rep.reply(page=page, element=message,
                                   text=f"`Chat[{name}] with GID[{GID}] is not in ban list.`")
                     return
@@ -242,7 +244,6 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
                     if GID not in _.ban_list:
                         helper.react(page=page, message=message)
                         _.ban_list.append(GID)
-                        print(f"`chat is banned now : [{name}]`")
                         rep.reply(page=page, element=message, text=f"`chat is banned now : [{name}]`")
                         check = True
                     else:
@@ -255,8 +256,9 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
                 return
 
         try:
-            Ban_Handle()
-            if check: return
+            Ban_Handle(message=message)
+            if check:
+                return
         except Exception as e:
             print(f" Error in Ban Handle : {e}")
 
@@ -265,6 +267,7 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
         def cmd_exec():
             admin_cmds = ["pause_on", "pause_off", "pause_show", "showq", "...help",
                           SETTINGS.NLP, SETTINGS.QUANTIFIER, "--ban--", "--unban--"]
+
             user_cmds = [SETTINGS.NLP, SETTINGS.QUANTIFIER, "showq", "...help"]
 
             if Admin_AUTH and t in admin_cmds + user_cmds:
@@ -272,8 +275,8 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
             elif user_auth and t in user_cmds:
                 _process_cmd(message=message, text=text)
             else:
-                print(f"Unauthorized command '{t}' from {sender}")
-                rep.reply(page=page, element=message, text=f"Unauthorized command '{t}' from {sender}")
+                rep.reply(page=page, element=message,
+                          text=f"Unauthorized command '{t}' from {sender}")
 
         try:
             cmd_exec()
@@ -285,9 +288,13 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
     except Exception as e:
         print(f"⚠️ Error in _auth_handle(): {e}")
         try:
-            rep.reply(page=page, element=message, text="⚠️ Internal error occurred while processing.")
+            if message:   # 🔥 FIX: only reply if message exists
+                rep.reply(page=page, element=message, text="⚠️ Internal error occurred while processing.")
+            else:
+                print("⚠️ Could not reply because message was not initialized.")
         except Exception as inner_e:
             print(f"⚠️ Failed to reply to error: {inner_e}")
+
 
 
 def _Admin_Process(message: ElementHandle, fun_name: str) -> None:
@@ -377,9 +384,9 @@ def PersonalChatCheck(chat: Locator) -> bool:
             try :
                 chat.click(timeout=3000)
             except Exception as e:
-                print(" Chat In Personal failed ")
+                print(f"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Personal Chat click failed %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% \n {e}")
             messages = sc.messages(page=page)
-            message = messages.nth(0).element_handle(timeout=1001)  # Any message can define the authentication
+            message = messages.nth(0).element_handle(timeout=1000)  # Any message can define the authentication
 
             num = ex.getJID_mess(message).replace("@c.us", "")
             BOT_NUMBER = re.sub(r"\D", "", SETTINGS.BOT_NUMBER)

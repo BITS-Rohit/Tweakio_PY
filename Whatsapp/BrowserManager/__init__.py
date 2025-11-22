@@ -1,6 +1,7 @@
 import pickle
 from pathlib import Path
 
+from typing import Optional
 from browserforge.fingerprints import FingerprintGenerator
 from camoufox import launch_options
 from camoufox.sync_api import Camoufox, BrowserContext
@@ -19,7 +20,7 @@ addons = [
     # "/home/radheradhe/Desktop/Camoufox_addons/youtube_high_definition-118.0.9"
 ]
 
-BrowserContextInstance: BrowserContext
+BrowserContextInstance: Optional[BrowserContext] = None
 pageManager = []
 fg = None
 traces_dir = dirs.getTraceDir()
@@ -34,6 +35,7 @@ def getInstance() -> BrowserContext:
     return BrowserContextInstance
 
 
+# noinspection PyTypeChecker
 def getBrowser() -> BrowserContext:
     """Initialize Camoufox with persistent context and fingerprint."""
     global BrowserContextInstance, fg

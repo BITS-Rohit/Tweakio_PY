@@ -208,7 +208,7 @@ def showgc(page: Page, locator: ElementHandle) -> None:
     Behavior:
         Sends either "On" or "Off" depending on SETTINGS.GLOBAL_MODE.
     """
-    text = f"Current Global Mode :`{'On ' if SETTINGS.GLOBAL_MODE else 'Off'}`"
+    text = f"`Current Global Mode =>[ {"On" if SETTINGS.GLOBAL_MODE else "Off"} ]`"
     rep.reply(page=page, element=locator, text=text)
 
 
@@ -223,7 +223,7 @@ def showq(page: Page, locator: ElementHandle) -> None:
     Behavior:
         Sends the value of SETTINGS.QUANTIFIER to the chat.
     """
-    text = f"`Active Quant : {SETTINGS.QUANTIFIER}`"
+    text = f"`Active Quant => {SETTINGS.QUANTIFIER}`"
     rep.reply(page=page, element=locator, text=text)
 
 
@@ -277,18 +277,18 @@ def save_video(page: Page, chat: ElementHandle, message: ElementHandle, filename
 
     # Fetch, decode, and save the video
     base64_data = page.evaluate("""
-        async (blobUrl) => {
-            const res = await fetch(blobUrl);
-            const blob = await res.blob();
-            const arrayBuffer = await blob.arrayBuffer();
-            const uint8Array = new Uint8Array(arrayBuffer);
-            let binary = '';
-            for (let i = 0; i < uint8Array.length; i++) {
-                binary += String.fromCharCode(uint8Array[i]);
-            }
-            return btoa(binary);
-        }
-    """, blob_url)
+                                async (blobUrl) => {
+                                    const res = await fetch(blobUrl);
+                                    const blob = await res.blob();
+                                    const arrayBuffer = await blob.arrayBuffer();
+                                    const dataBytes = new Uint8Array(arrayBuffer);  // renamed
+                                    let binary = '';
+                                    for (let i = 0; i < dataBytes.length; i++) {
+                                        binary += String.fromCharCode(dataBytes[i]);
+                                    }
+                                    return btoa(binary);
+                                }
+                                """, blob_url)
 
     with open(filename, "wb") as f:
         f.write(base64.b64decode(base64_data))
@@ -350,8 +350,8 @@ def react(message: Union[ElementHandle, Locator], page: Page, tries: int = 0) ->
                 print("dialog not visible")
             else:
                 emoji.click(timeout=2000, force=True)
-        except Exception :
-            print("pass emoji.")
+        except Exception as e:
+            print(f"pass emoji %%%% {e}")
 
         time.sleep(random.uniform(1.0, 2.0))
         if sc.isReacted(message):

@@ -222,7 +222,7 @@ def trace_message(
 
 
 
-def get_File_name(message: Locator, chat: Locator) -> str:
+def get_File_name(message: Union[ElementHandle, Locator], chat: Union[ElementHandle, Locator]) -> str:
     # chat--sender--SYS_TIME
     name = sc.getChatName(chat=chat)
     sender = getSenderID(message=message)
