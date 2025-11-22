@@ -178,29 +178,48 @@ def get_Timestamp(message: Union[ElementHandle, Locator]) -> str:
         return ""
 
 
-def trace_message(seen_messages: dict, chat: Union[ElementHandle, Locator],
-                  message: Union[ElementHandle, Locator]) -> None:
+def trace_message(
+        seen_messages: dict,
+        chat: Union[ElementHandle, Locator],
+        message: Union[ElementHandle, Locator]
+    ) -> None:
     """Tracks a unique message and stores its details if not already seen."""
-    # Till now, we are here incoming the Locator.
+
+    def safe_call(name, func):
+        """Runs a function safely and logs where it failed."""
+        try:
+            return func()
+        except Exception as e:
+            print(f"[trace_message] Error in {name}: {e}")
+            return None
+
     try:
-        data_id = sc.get_dataID(message)
+        # Get data_id safely
+        data_id = safe_call("get_dataID", lambda: sc.get_dataID(message))
+        if not data_id:
+            print("[trace_message] No data_id returned, skipping.")
+            return
+
         if data_id in seen_messages:
             return
 
+        # Build message dictionary with safe calls
         seen_messages[data_id] = {
-            "chat": sc.getChatName(chat),
-            "community": sc.is_community(chat),
-            "preview_url": sc.getChat_low_Quality_Img(chat),
-            "jid": getJID_mess(message),
-            "message": sc.get_message_text(message),
-            "sender": getSenderID(message),
-            "time": get_Timestamp(message),
+            "chat": safe_call("getChatName", lambda: sc.getChatName(chat)),
+            "community": safe_call("is_community", lambda: sc.is_community(chat)),
+            "preview_url": safe_call("getChat_low_Quality_Img", lambda: sc.getChat_low_Quality_Img(chat)),
+            "jid": safe_call("getJID_mess", lambda: getJID_mess(message)),
+            "message": safe_call("get_message_text", lambda: sc.get_message_text(message)),
+            "sender": safe_call("getSenderID", lambda: getSenderID(message)),
+            "time": safe_call("get_Timestamp", lambda: get_Timestamp(message)),
             "systime": time.time(),
-            "direction": getDirection(message),
-            "type": get_mess_type(message)
+            "direction": safe_call("getDirection", lambda: getDirection(message)),
+            "type": safe_call("get_mess_type", lambda: get_mess_type(message))
         }
+
     except Exception as e:
-        print(f"Error in Trace message : {e}")
+        print(f"[trace_message] Unexpected error in trace_message: {e}")
+
 
 
 def get_File_name(message: Locator, chat: Locator) -> str:
@@ -312,7 +331,6 @@ def do_unread(page: Page, chat: Union[ElementHandle, Locator]) -> None:
 
         unread_option = app_menu.query_selector("li span:text-matches('mark as unread', 'i')")
         if unread_option:
-            # ha.move_mouse_to_locator(page, unread_option)
             unread_option.click(timeout=random.randint(1701, 2001))
         else:
             raise Exception("'Mark as unread' option not found or not visible")

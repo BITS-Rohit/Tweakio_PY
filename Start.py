@@ -8,9 +8,9 @@ import traceback
 from playwright.sync_api import Page
 
 from Whatsapp import Brain
-from Whatsapp import Extra as ex
-from Whatsapp import SETTINGS, ___ as _
-from Whatsapp import WebLogin as wl
+from Whatsapp  import Extra as ex
+from Whatsapp  import SETTINGS, ___ as _
+from Whatsapp  import WebLogin as wl
 from Whatsapp.BrowserManager import getPage, close_browser
 
 

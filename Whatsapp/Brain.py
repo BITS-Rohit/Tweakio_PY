@@ -13,7 +13,7 @@ from Whatsapp import SETTINGS, selectors_config as sc, Extra as ex, ___ as _, Me
 debug = False
 refreshTime = SETTINGS.REFRESH_TIME
 pause_mode = False
-page = None
+page : Page
 detect = True
 
 
@@ -115,11 +115,12 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
 
                     # auth handler
                     _auth_handle(
+                        page=page,
                         Locator_message=message,
                         text=text,
                         Locator_chat=chat,
                         p_chat=Personal_auth,
-                        page=page
+
                     )
 
                 # refresh messages
@@ -153,7 +154,7 @@ def _check_messages(chat: Union[ElementHandle, Locator], y: int) -> None:  # cha
 def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], text: str,
                  Locator_chat: Union[ElementHandle, Locator],
                  p_chat: bool = False) -> None:  # change
-    message: ElementHandle = None
+    message: ElementHandle
     try:
         if isinstance(Locator_message, Locator):
             message = Locator_message.element_handle()
@@ -327,7 +328,8 @@ def _process_cmd(message: ElementHandle, text: str) -> None:
             helper.showq(page=page, locator=message)
 
         elif text == SETTINGS.NLP:
-            helper.nlp(page=page, locator=message, f_info=text.replace(SETTINGS.NLP, ""))
+            helper.nlp(page=page, message
+            =message, f_info=text.replace(SETTINGS.NLP, ""))
 
         else:
             _natural_cmd(message=message, text=text)
@@ -372,7 +374,10 @@ def PersonalChatCheck(chat: Locator) -> bool:
         you = chat.get_by_role("gridcell").get_by_text("(You)", exact=True)
 
         if you.is_visible():
-            chat.click(timeout=3000)
+            try :
+                chat.click(timeout=3000)
+            except Exception as e:
+                print(" Chat In Personal failed ")
             messages = sc.messages(page=page)
             message = messages.nth(0).element_handle(timeout=1001)  # Any message can define the authentication
 

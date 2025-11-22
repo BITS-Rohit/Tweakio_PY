@@ -68,17 +68,31 @@ def total_chats(page: Page) -> int:
 
 
 def chat_items(page: Page) -> Locator:
-    """Returns a locator for all individual chat items (buttons) in the list."""
-    return chat_list(page).get_by_role("listitem")
-
+    base_list = chat_list(page)
+    list_items = base_list.get_by_role("listitem")
+    rows = base_list.get_by_role("row")
+    return list_items.or_(rows)
 
 def getChat_low_Quality_Img(chat: Union[ElementHandle, Locator]) -> str:
     """Extracts the low-quality image (thumbnail) from a chat preview item."""
-    if isinstance(chat, Locator): chat = chat.element_handle(timeout=1001)
-    img_el = chat.query_selector_all("img[src]")[0]
-    if img_el and img_el.is_visible():
-        return img_el.get_attribute("src")
-    return ""
+    try:
+        if isinstance(chat, Locator):
+            chat = chat.element_handle(timeout=1000)
+        if not chat:
+            return ""
+
+        imgs = chat.query_selector_all("img[src]")
+        if not imgs:  # no images found
+            return ""
+
+        img_el = imgs[0]
+        if img_el and img_el.is_visible():
+            return img_el.get_attribute("src")
+
+        return ""
+    except Exception as e:
+        print(f"[getChat_low_Quality_Img] Error: {e}")
+        return ""
 
 
 def getChatName(chat: Union[ElementHandle, Locator]) -> str:

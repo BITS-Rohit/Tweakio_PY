@@ -1,4 +1,6 @@
-from playwright.sync_api import Page, Locator
+from typing import Union
+
+from playwright.sync_api import Page, Locator, ElementHandle
 
 from Whatsapp import Methods as helper, Reply as rep, pre_dir as pd
 
@@ -24,7 +26,7 @@ pool = [
     "menu"
 ]
 
-def Agent_Commands(page: Page, message: Locator, f_name: str, f_info: str):
+def Agent_Commands(page: Page, message: Union[Locator,ElementHandle], f_name: str, f_info: str):
     text = f"Unknown command: [{f_name}]"
     helper.react(message=message, page=page)
 

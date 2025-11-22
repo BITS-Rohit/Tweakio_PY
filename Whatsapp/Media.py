@@ -8,18 +8,6 @@ from playwright.sync_api import Page, Locator, FileChooser
 from Whatsapp import selectors_config as sc
 
 # ----------------------------------------------------------------  #
-IMAGE_EXTN = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
-VIDEO_EXTN = {".mp4", ".mov", ".3gp", ".mkv"}
-
-
-def infer_media_type_from_file(filepath: str) -> str:
-    ext = Path(filepath).suffix.lower()
-    if ext in IMAGE_EXTN:
-        return "image"
-    if ext in VIDEO_EXTN:
-        return "video"
-    return "doc"
-
 
 def getMediaOptionLocator(page: Page, mediatype: str) -> Locator:
     """

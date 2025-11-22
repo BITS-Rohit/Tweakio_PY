@@ -1,5 +1,4 @@
 import pickle
-import time
 from pathlib import Path
 
 from browserforge.fingerprints import FingerprintGenerator

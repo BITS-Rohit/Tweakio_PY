@@ -32,7 +32,7 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
             position={"x": rel_x, "y": rel_y},  # relative to element
             click_count=2,
             delay=random.randint(38, 69),
-            timeout=2000
+            timeout=3000
         )
 
         # small pause to let UI react
@@ -60,12 +60,12 @@ def reply(page: Page, element: Union[ElementHandle,Locator], text: str) -> None:
         element (ElementHandle): The message element to reply to.
         text (str): The message text to send.
     """
-    if reply_(page=page, message=element, text=text):
+    if _reply_(page=page, message=element, text=text):
         page.keyboard.press("Enter")
     else : print("Reply Returned False , Cant Press Enter")
 
 
-def reply_(page: Page, message: Union[ElementHandle,Locator], text: str, retry: int = 0) -> bool:
+def _reply_(page: Page, message: Union[ElementHandle,Locator], text: str, retry: int = 0) -> bool:
     """
     Core reply function with retries, without pressing Enter automatically.
 
@@ -82,13 +82,13 @@ def reply_(page: Page, message: Union[ElementHandle,Locator], text: str, retry: 
         double_edge_click(page=page, message=message)
 
         inBox = sc.message_box(page)
-        inBox.click(timeout=2000)
+        inBox.click(timeout=3000)
 
         ha.human_send(page=page, element=inBox.element_handle(timeout=1000), text=text)
         return True
     except Exception as e:
         if retry < 1:
-            return reply_(page=page, message=message, text=text, retry=retry + 1)
+            return _reply_(page=page, message=message, text=text, retry=retry + 1)
         print(f"Error in _reply : \n {e}")
     return False
 
@@ -108,7 +108,7 @@ def reply_media(page: Page, message: ElementHandle, text: str, file: list[str],
         mediatype (str): Type of media ('doc', 'image', etc.)
         send_type (str): 'add' to attach normally, 'inject' to use InjectMedia.
     """
-    success = reply_(page=page, message=message, text=text)
+    success = _reply_(page=page, message=message, text=text)
     if success:
         if send_type == "inject":
             med.InjectMedia(page=page, files=file, mediatype=mediatype)
