@@ -25,6 +25,10 @@ BOT_NUM_COUNTRY = os.getenv("BOT_NUM_COUNTRY", "")
 ADMIN_NUMBER = os.getenv("ADMIN_NUMBER", "")
 ADMIN_NAME = os.getenv("ADMIN_NAME", "Admin")
 
+# Quantifier :
+QUANTIFIER = os.getenv("QUANTIFIER", "//")
+NLP = os.getenv("NLP", "/say")
+
 #  GitHub Config
 GH_TOKEN = os.getenv("GH_TOKEN", "")
 REPO_NAME = os.getenv("REPO_NAME", "")
@@ -38,13 +42,14 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 CSE_ID = os.getenv("CSE_ID", "")
 
 #  Agent.ai Integration
-AGENT_AI_KEY = os.getenv("AGENT_AI_KEY", "")
-QUANTIFIER = os.getenv("QUANTIFIER", "//")
-NLP = os.getenv("NLP", "/say")
-AGENT_ID = os.getenv("AGENT_ID", "")
-WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
-BASE_URL = os.getenv("BASE_URL", "")
-INTRO_IMG_URL = os.getenv("INTRO_IMG_URL", "")
+# AI_NAME=os.getenv("AI_NAME", "gpt")
+POST_URL = os.getenv("POST_URL", "https://api.agent.ai/v1/agent/mr9zb4vn5xtb166v/webhook/9c538b06/async")
+GET_URL = os.getenv("GET_URL", "https://api.agent.ai/v1/agent/mr9zb4vn5xtb166v/webhook/9c538b06/status/<run_id>")
+# AGENT_AI_KEY = os.getenv("AGENT_AI_KEY", "")
+# AGENT_ID = os.getenv("AGENT_ID", "")
+# WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
+# BASE_URL = os.getenv("BASE_URL", "")
+# INTRO_IMG_URL = os.getenv("INTRO_IMG_URL", "")
 
 #  Debug Mode & System configs
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"

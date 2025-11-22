@@ -1,7 +1,7 @@
 import random
 from typing import Union
 
-from playwright.async_api import Locator
+from playwright.async_api import Locator, Position
 from playwright.sync_api import Page, ElementHandle
 
 from Whatsapp import selectors_config as sc, HumanAction as ha, Media as med, Menu as menu, pre_dir as pwd
@@ -29,7 +29,7 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
 
         page.mouse.move(rel_x, rel_y)
         message.click(
-            position={"x": rel_x, "y": rel_y},  # relative to element
+            position=Position(rel_x, rel_y),  # relative to element
             click_count=2,
             delay=random.randint(38, 69),
             timeout=3000
@@ -121,7 +121,7 @@ def reply_media(page: Page, message: ElementHandle, text: str, file: list[str],
         page.keyboard.press("Escape", delay=random.randint(701, 893))
 
 
-def reply_menu(page: Page, message: ElementHandle, file: str = f"{pwd.rootDir}/files/img.png") -> None:
+def reply_menu(page: Page, message: Union[ElementHandle, Locator], file: str = f"{pwd.rootDir}/files/img.png") -> None:
     """
     Reply the menu with image to the message.
 

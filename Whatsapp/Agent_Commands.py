@@ -26,7 +26,18 @@ pool = [
     "menu"
 ]
 
-def Agent_Commands(page: Page, message: Union[Locator,ElementHandle], f_name: str, f_info: str):
+
+def Bot_Commands(page: Page, message: Union[Locator, ElementHandle], f_name: str, f_info: str,
+                 chat: Union[ElementHandle, Locator]):
+    """
+    Bot Launch Commands
+    :param page:
+    :param message:
+    :param f_name:
+    :param f_info:
+    :param chat:
+    :return:
+    """
     text = f"Unknown command: [{f_name}]"
     helper.react(message=message, page=page)
 
@@ -61,25 +72,24 @@ def Agent_Commands(page: Page, message: Union[Locator,ElementHandle], f_name: st
         case 'banlist':
             helper.banlist(page=page, locator=message)
         case 'saveVid':
-            helper.save_video(page=page, message=message)
+            helper.save_video(page=page, message=message, chat=chat)
         case "detect":
             helper.detect(page=page, message=message)
         case "ai":
             helper.ai(page=page, message=message, ask=f_info)
         case "inject":
             text = "`--[Here is your file]--`"
-            rep.reply_media(page=page, mediatype="doc", message=message, send_type="inject",
-                            file=[f"{pd.files}/test.mp4"], text=text)
+            rep.reply_media(page=page, message=message, send_type="inject", file=[f"{pd.files}/test.mp4"],
+                            text=text)  # MediaType : default : doc
         case "send":
             text = "`--[Here is your file]--`"
-            rep.reply_media(page=page, mediatype="image", message=message, file=[f"{pd.files}/test.jpg"], text=text,
-                            send_type="add")
+            rep.reply_media(page=page, mediatype="image", message=message, file=[f"{pd.files}/test.jpg"],
+                            text=text)  # Send_type : default : add
         case "audio":
-            rep.reply_media(page=page, mediatype="audio", message=message, file=[f"{pd.files}/test.mp3"], text="",
-                            send_type="add")
-
+            rep.reply_media(page=page, mediatype="audio", message=message, file=[f"{pd.files}/test.mp3"],
+                            text="")  # Send_type : default : add
         case "menu":
-            rep.reply_menu(page=page,locator=message)
+            rep.reply_menu(page=page, message=message)
 
         case _:
             print(text)

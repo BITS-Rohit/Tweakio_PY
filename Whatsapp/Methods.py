@@ -6,15 +6,18 @@ from typing import Union
 
 from playwright.sync_api import Page, ElementHandle, Locator
 
-from Langchain_AI import run_AI
+from Langchain_AI import run_AI, Agent_ai
 from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
                       selectors_config as sc)
 from Whatsapp.selectors_config import isReacted
+from Whatsapp.SETTINGS import POST_URL, GET_URL
 
 # ----------------
 gemini = run_AI.Gemini()
-
-
+gpt = Agent_ai.AgentAiClient(
+    post_url=POST_URL,
+    get_url_base=GET_URL,
+)
 # ----------------
 def setq(page: Page, locator: ElementHandle, quant: str) -> None:
     """
@@ -208,7 +211,7 @@ def showgc(page: Page, locator: ElementHandle) -> None:
     Behavior:
         Sends either "On" or "Off" depending on SETTINGS.GLOBAL_MODE.
     """
-    text = f"`Current Global Mode =>[ {"On" if SETTINGS.GLOBAL_MODE else "Off"} ]`"
+    text = f"`Current Global Mode =>[ {'On' if SETTINGS.GLOBAL_MODE else 'Off'} ]`"
     rep.reply(page=page, element=locator, text=text)
 
 
@@ -244,10 +247,13 @@ def showchat(page: Page, locator: ElementHandle) -> None:
 
 # ---- Media Content--------------
 
-def save_video(page: Page, chat: ElementHandle, message: ElementHandle, filename: str = None) -> None:
+def save_video(page: Page, chat: Union[ElementHandle,Locator], message: Union[ElementHandle,Locator], filename: str = None) -> None:
     """
     Saves a video from a WhatsApp message using ElementHandle.
     """
+    if isinstance(chat, Locator): chat = chat.element_handle(timeout=1000)
+    if isinstance(message , Locator): message = message.element_handle(timeout=1000)
+
     if filename is None:
         filename = ex.get_File_name(message=message, chat=chat)
 
@@ -371,17 +377,14 @@ def detect(page: Page, message: ElementHandle) -> None:  # change to ElementHand
     rep.reply(page=page, element=message,
               text=text)  # rep.reply still accepts Locator; may need wrapping if fully ElementHandle
 
-
 # ------------  ----------- AI ------------ ------------ #
 def ai(page: Page, message: ElementHandle, ask: str) -> None:  # change to ElementHandle
     """Gets AI answer for the given ask string and replies via the page"""
-    response = gemini.chat(user_input=ask)  # Call your AI synchronously
+    response = gpt.ask(ask)  # Call your AI synchronously
     rep.reply(page=page, element=message, text=response)  # rep.reply still accepts Locator
-
 
 # -------- -------- -------- -------- -------- -------- -------- -------- -------- --------
 def nlp(page: Page, message: ElementHandle, f_info: str) -> None:  # change to ElementHandle
     """ natural language-driven assessment command"""
-    # Still Under development
     rep.reply(page=page, element=message, text=f_info)  # same note: rep.reply may need locator conversion
     pass

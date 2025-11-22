@@ -271,9 +271,9 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
             user_cmds = [SETTINGS.NLP, SETTINGS.QUANTIFIER, "showq", "...help"]
 
             if Admin_AUTH and t in admin_cmds + user_cmds:
-                _Admin_Process(message=message, fun_name=text)
+                _Admin_Process(message=message, fun_name=text, chat= Locator_chat)
             elif user_auth and t in user_cmds:
-                _process_cmd(message=message, text=text)
+                _process_cmd(message=message, text=text, chat = Locator_chat)
             else:
                 rep.reply(page=page, element=message,
                           text=f"Unauthorized command '{t}' from {sender}")
@@ -297,7 +297,7 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
 
 
 
-def _Admin_Process(message: ElementHandle, fun_name: str) -> None:
+def _Admin_Process(message: ElementHandle, fun_name: str, chat : Union[ElementHandle,Locator]) -> None:
     global pause_mode
     if fun_name in ["pause_on", "pause_off", "pause_show"]:
         helper.react(message=message, page=page)
@@ -317,14 +317,14 @@ def _Admin_Process(message: ElementHandle, fun_name: str) -> None:
             rep.reply(page=page, element=message, text=f"Pause Status: `{'ON' if pause_mode else 'OFF'}`")
 
         else:
-            _process_cmd(message, fun_name)
+            _process_cmd(message, fun_name, chat)
 
     except Exception as e:
         print(f"[Admin_Process Error] {e}")
         rep.reply(page=page, element=message, text=f"❗ Error in admin command:\n`{e}`")
 
 
-def _process_cmd(message: ElementHandle, text: str) -> None:
+def _process_cmd(message: ElementHandle, text: str, chat : Union[ElementHandle,Locator]) -> None:
     if text in ["showq", "...help"]:
         helper.react(message=message, page=page)
     try:
@@ -339,14 +339,14 @@ def _process_cmd(message: ElementHandle, text: str) -> None:
             =message, f_info=text.replace(SETTINGS.NLP, ""))
 
         else:
-            _natural_cmd(message=message, text=text)
+            _natural_cmd(message=message, text=text, chat =chat)
 
     except Exception as e:
         print(f"[Process_Cmd Error] {e}")
         rep.reply(page=page, element=message, text=f"❗ Error in command:\n`{e}`")
 
 
-def _natural_cmd(message: ElementHandle, text: str) -> None:
+def _natural_cmd(message: ElementHandle, text: str, chat : Union[ElementHandle,Locator]) -> None:
     """
     Processes a natural command from user text and calls post-processing.
 
@@ -365,7 +365,7 @@ def _natural_cmd(message: ElementHandle, text: str) -> None:
         f_name = parts[1].lower().strip()
         f_info = parts[2].strip() if len(parts) > 2 else ""
 
-        process.Agent_Commands(page=page, message=message, f_name=f_name, f_info=f_info)
+        process.Bot_Commands(page=page, message=message, f_name=f_name, f_info=f_info, chat=chat)
 
     except Exception as e:
         print(f"[Natural_Cmd Error] {e}")
