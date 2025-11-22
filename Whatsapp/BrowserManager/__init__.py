@@ -10,13 +10,13 @@ from Whatsapp import pre_dir as dirs
 
 # ---------------- Config ----------------
 addons = [
-    "/home/radheradhe/Desktop/Camoufox_addons/adblock_for_firefox-6.26.0",
-    "/home/radheradhe/Desktop/Camoufox_addons/privacy_badger17-2025.5.30",
-    "/home/radheradhe/Desktop/Camoufox_addons/search_by_image-8.2.3",
-    "/home/radheradhe/Desktop/Camoufox_addons/sponsorblock-5.14",
-    "/home/radheradhe/Desktop/Camoufox_addons/video_downloadhelper-9.5.0.2",
-    "/home/radheradhe/Desktop/Camoufox_addons/view_pdf-1.1",
-    "/home/radheradhe/Desktop/Camoufox_addons/youtube_high_definition-118.0.9"
+    # "/home/radheradhe/Desktop/Camoufox_addons/adblock_for_firefox-6.26.0",
+    # "/home/radheradhe/Desktop/Camoufox_addons/privacy_badger17-2025.5.30",
+    # "/home/radheradhe/Desktop/Camoufox_addons/search_by_image-8.2.3",
+    # "/home/radheradhe/Desktop/Camoufox_addons/sponsorblock-5.14",
+    # "/home/radheradhe/Desktop/Camoufox_addons/video_downloadhelper-9.5.0.2",
+    # "/home/radheradhe/Desktop/Camoufox_addons/view_pdf-1.1",
+    # "/home/radheradhe/Desktop/Camoufox_addons/youtube_high_definition-118.0.9"
 ]
 
 BrowserContextInstance: BrowserContext
