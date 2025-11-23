@@ -41,8 +41,10 @@ Whatsapp/Depreaction
 
 # history
 Langchain_AI/history
+Langchain_AI/History
 Whatsapp/Video
-/screenshots
+/Whatsapp/History
+/Whatsapp/screenshots
 PopUp.png
 /PopUp.png
 Whatsapp/Helper Directory For User
@@ -50,8 +52,10 @@ Whatsapp/Helper Directory For User
 !/Whatsapp/BrowserManager/__init__.py
 /Whatsapp/BrowserManager/*
 /Whatsapp/storage_state.json
-/Whatsapp/files/*
+/Whatsapp/files
 /Whatsapp/BrowserManager/CusBrowser.py
 /Whatsapp/BrowserManager/Stealing.py
 
 /Whatsapp/Helper Directory For User
+/Whatsapp/GoogleFormFiller/info.txt
+/Whatsapp/GoogleFormFiller/resume.pdf

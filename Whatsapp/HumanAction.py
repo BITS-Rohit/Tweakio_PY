@@ -1,9 +1,10 @@
 import math
 import random
 import time
+from typing import Union
 
 import pyperclip
-from playwright.sync_api import Page, ElementHandle
+from playwright.sync_api import Page, ElementHandle, Locator
 
 current_mouse_position = {"x": 0, "y": 0}
 
@@ -63,13 +64,14 @@ def Move_mouse_to_locator(page, locator):
 
 
 
-def human_send(page: Page, element: ElementHandle, text: str):
+def human_send(page: Page, element: Union[ElementHandle, Locator], text: str):
     """
     Clicks into the input field and types the message.
     Handles multiline input using Shift+Enter for `\n`.
     Falls back to paste if the message is large.
     Works with ElementHandle instead of Locator.
     """
+    if isinstance(element, Locator):element = element.element_handle(timeout=1000)
     element.click(timeout=2000)
     try:
         element.press(key="Control+A")
@@ -78,7 +80,7 @@ def human_send(page: Page, element: ElementHandle, text: str):
         lines = text.split("\n")
 
         # If short text with no newline, type normally
-        if len(text) <= 50 and len(lines) == 1:
+        if len(text) <= 30 and len(lines) == 1:
             page.keyboard.type(text, delay=random.randint(76, 98))
         else:
             for i, line in enumerate(lines):
@@ -99,3 +101,16 @@ def human_send(page: Page, element: ElementHandle, text: str):
         except:
             page.keyboard.press("Escape", delay=0.5)
             page.keyboard.press("Escape", delay=0.5)
+
+def Copy_Paste(page: Page, element: Union[ElementHandle, Locator], text: str):
+    """Direct Copy paste"""
+    if isinstance(element, Locator):element = element.element_handle(timeout=1000)
+    try :
+        element.press(key="Control+A")
+        element.press(key="Backspace")
+        element.click(timeout=2000)
+        pyperclip.copy(text=text)
+        page.keyboard.press("Control+V")
+    except Exception as e:
+        print(f"Copy Paste Failed {e}")
+        human_send(page, element, text)

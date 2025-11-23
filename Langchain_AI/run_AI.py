@@ -47,7 +47,7 @@ class Gemini:
             return_messages=True
         )
 
-        self.base = "history"
+        self.base = "History"
         os.makedirs(self.base, exist_ok=True)
 
         self.memory.chat_memory.add_message(SystemMessage(content=memory_prompt))

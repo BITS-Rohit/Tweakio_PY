@@ -1,3 +1,4 @@
+"""Settings Init from ENV, Shared Module"""
 import random
 from dotenv import load_dotenv
 from pathlib import Path
@@ -65,3 +66,7 @@ RESTART_TIME= int(os.getenv("RESTART_TIME","2"))
 # -- LangSmith -- #
 LANGCHAIN_API_KEY=os.getenv("LANGCHAIN_API_KEY", "")
 LANGCHAIN_PROJECT=os.getenv("LANGCHAIN_PROJECT", "Lang-Bot")
+
+
+# ----  Social --- EXTRA UTILS
+YOUTUBE_API_KEY=os.getenv("YOUTUBE_API_KEY", "")

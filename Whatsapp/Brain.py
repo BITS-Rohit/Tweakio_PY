@@ -207,7 +207,7 @@ def _auth_handle(page: Page, Locator_message: Union[ElementHandle, Locator], tex
         if message.bounding_box() is None:
             message.scroll_into_view_if_needed(timeout=2000)
 
-        pause_handle(p_auth=Admin_AUTH, t=t, sender=sender, text=text, message=message)
+        pause_handle(p_auth=Admin_AUTH, t=t, sender=sender, text=text, message=message, chat= chat)
 
         check = False
 
@@ -386,6 +386,9 @@ def PersonalChatCheck(chat: Locator) -> bool:
             except Exception as e:
                 print(f"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Personal Chat click failed %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% \n {e}")
             messages = sc.messages(page=page)
+            if messages.nth(0).wait_for(timeout=2000):
+                print("Messages Loading TimeOut // Personal Chat check")
+                return False
             message = messages.nth(0).element_handle(timeout=1000)  # Any message can define the authentication
 
             num = ex.getJID_mess(message).replace("@c.us", "")
@@ -401,10 +404,10 @@ def PersonalChatCheck(chat: Locator) -> bool:
     return False
 
 
-def pause_handle(p_auth: bool, t: str, sender: str, text: str, message: ElementHandle) -> None:
+def pause_handle(p_auth: bool, t: str, sender: str, text: str, message: ElementHandle, chat : ElementHandle) -> None:
     if pause_mode:
         if t in ["pause_off", "pause_show"] and p_auth:
-            _Admin_Process(message, text)
+            _Admin_Process(message, text, chat)
         else:
             print(f"Paused. Ignoring '{t}' from {sender}")
         return

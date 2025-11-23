@@ -1,3 +1,4 @@
+""" Custom Methods"""
 import base64
 import random
 import re
@@ -6,11 +7,13 @@ from typing import Union
 
 from playwright.sync_api import Page, ElementHandle, Locator
 
+from EXTRA_UTILS.youtube import YoutubeAPI
+from Whatsapp.GoogleFormFiller.Fill_Form import Start_Filling
 from Langchain_AI import run_AI, Agent_ai
 from Whatsapp import (SETTINGS, Reply as rep, Menu as menu, Manual as guide, ___ as _, Extra as ex,
                       selectors_config as sc)
-from Whatsapp.selectors_config import isReacted
 from Whatsapp.SETTINGS import POST_URL, GET_URL
+from Whatsapp.selectors_config import isReacted
 
 # ----------------
 gemini = run_AI.Gemini()
@@ -18,6 +21,9 @@ gpt = Agent_ai.AgentAiClient(
     post_url=POST_URL,
     get_url_base=GET_URL,
 )
+yt = YoutubeAPI(API_KEY=SETTINGS.YOUTUBE_API_KEY)
+
+
 # ----------------
 def setq(page: Page, locator: ElementHandle, quant: str) -> None:
     """
@@ -247,17 +253,19 @@ def showchat(page: Page, locator: ElementHandle) -> None:
 
 # ---- Media Content--------------
 
-def save_video(page: Page, chat: Union[ElementHandle,Locator], message: Union[ElementHandle,Locator], filename: str = None) -> None:
+def save_video(page: Page, chat: Union[ElementHandle, Locator], message: Union[ElementHandle, Locator],
+               filename: str = None) -> None:
     """
     Saves a video from a WhatsApp message using ElementHandle.
     """
     if isinstance(chat, Locator): chat = chat.element_handle(timeout=1000)
-    if isinstance(message , Locator): message = message.element_handle(timeout=1000)
+    if isinstance(message, Locator): message = message.element_handle(timeout=1000)
 
     if filename is None:
         filename = ex.get_File_name(message=message, chat=chat)
 
     def get_vid_blob() -> str:
+        """Helper function for save vide"""
         playmedia = message.query_selector("span[data-icon='media-play']")
         if not playmedia:
             print("Can't find play-media button.")
@@ -306,6 +314,7 @@ def save_video(page: Page, chat: Union[ElementHandle,Locator], message: Union[El
 # ------------ Message Prettifiers----------------
 
 def react(message: Union[ElementHandle, Locator], page: Page, tries: int = 0) -> None:
+    """React on message"""
     if isinstance(message, Locator): message = message.element_handle(timeout=1001)
     try:
         attempts = 0
@@ -332,8 +341,8 @@ def react(message: Union[ElementHandle, Locator], page: Page, tries: int = 0) ->
             print("Already Reacted")
             return None
 
-        message.hover(timeout=2000,force=True)
-        emoji_picker_button = page.get_by_role("button",name=re.compile("react",re.I)).last
+        message.hover(timeout=2000, force=True)
+        emoji_picker_button = page.get_by_role("button", name=re.compile("react", re.I)).last
 
         try:
             if not emoji_picker_button:
@@ -350,12 +359,32 @@ def react(message: Union[ElementHandle, Locator], page: Page, tries: int = 0) ->
 
         page.wait_for_timeout(500)
 
-        try :
-            emoji = page.get_by_role("dialog").get_by_role("button").locator("img[alt='👍']").last
-            if not emoji:
-                print("dialog not visible")
-            else:
-                emoji.click(timeout=2000, force=True)
+        # ----- Click the designated emoji -----
+        try:
+            dialog = page.get_by_role("dialog")
+            dialog.wait_for(timeout=3000)
+
+            # Emoji locator (more stable than .last)
+            emoji = dialog.locator("img[alt='👍']").nth(-1)
+
+            # Wait until visible
+            emoji.wait_for(state="visible", timeout=2000)
+
+            # Scroll into view manually
+            page.evaluate(
+                "(el) => el.scrollIntoView({behavior: 'instant', block: 'center'})",
+                emoji
+            )
+
+            # Try clicking twice (UI sometimes animates)
+            for _ in range(2):
+                try:
+                    emoji.click(timeout=2000)
+                except:
+                    page.wait_for_timeout(200)  # small delay retry
+
+            print("⚠️ Emoji visible but could not click.")
+
         except Exception as e:
             print(f"pass emoji %%%% {e}")
 
@@ -373,18 +402,47 @@ def react(message: Union[ElementHandle, Locator], page: Page, tries: int = 0) ->
 
 
 def detect(page: Page, message: ElementHandle) -> None:  # change to ElementHandle
+    """Detect Incoming message type : [text , Image , Video]"""
     text = f"`Detected Message Type : {ex.get_mess_type(message)}`"
     rep.reply(page=page, element=message,
               text=text)  # rep.reply still accepts Locator; may need wrapping if fully ElementHandle
 
+
 # ------------  ----------- AI ------------ ------------ #
 def ai(page: Page, message: ElementHandle, ask: str) -> None:  # change to ElementHandle
     """Gets AI answer for the given ask string and replies via the page"""
-    response = gpt.ask(ask)  # Call your AI synchronously
+    response = gpt.ask(ask)  # Agent AI
     rep.reply(page=page, element=message, text=response)  # rep.reply still accepts Locator
+
 
 # -------- -------- -------- -------- -------- -------- -------- -------- -------- --------
 def nlp(page: Page, message: ElementHandle, f_info: str) -> None:  # change to ElementHandle
     """ natural language-driven assessment command"""
     rep.reply(page=page, element=message, text=f_info)  # same note: rep.reply may need locator conversion
     pass
+
+
+def SmartFormFill(message: ElementHandle) -> None:
+    """ fills form for given message """
+    from BrowserManager import getPage
+    page = getPage()
+    url = sc.get_message_text(message)
+    Start_Filling(page=page, url=url)
+
+
+def YoutubeAPISearch(message: ElementHandle, page: Page) -> None:
+    """Sends Searched queries according to YouTube API & query. It has Limits"""
+    searched = yt.search(sc.get_message_text(message))
+    rep.reply(page=page, element=message, text=searched, copy_paste=True)
+
+
+def YoutubeAPIAUDIO(message: ElementHandle, page: Page) -> None:
+    """Sends Audio to the Designated Message"""
+    link = sc.get_message_text(message)
+    ytd = yt.download_audio(link=link)
+    rep.reply_media(page=page, mediatype="audio", message=message, filePath=ytd)
+
+
+def YT_DLP_Search(message: ElementHandle, page: Page) -> None:
+    """Uses YT DLP to search for query, No Limit"""
+    rep.reply(page=page, element=message, text=yt.ytdlp_search(query=sc.get_message_text(message)), copy_paste=True)

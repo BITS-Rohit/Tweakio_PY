@@ -23,7 +23,11 @@ pool = [
     "inject",
     "ai",
     "audio",
-    "menu"
+    "menu",
+    "fill",
+    "yt.search",
+    "yt.audio",
+    "yt.dlp.s"
 ]
 
 
@@ -79,17 +83,25 @@ def Bot_Commands(page: Page, message: Union[Locator, ElementHandle], f_name: str
             helper.ai(page=page, message=message, ask=f_info)
         case "inject":
             text = "`--[Here is your file]--`"
-            rep.reply_media(page=page, message=message, send_type="inject", file=[f"{pd.files}/test.mp4"],
+            rep.reply_media(page=page, message=message, send_type="inject", filePath=[f"{pd.files}/test.mp4"],
                             text=text)  # MediaType : default : doc
         case "send":
             text = "`--[Here is your file]--`"
-            rep.reply_media(page=page, mediatype="image", message=message, file=[f"{pd.files}/test.jpg"],
+            rep.reply_media(page=page, mediatype="image", message=message, filePath=[f"{pd.files}/test.jpg"],
                             text=text)  # Send_type : default : add
         case "audio":
-            rep.reply_media(page=page, mediatype="audio", message=message, file=[f"{pd.files}/test.mp3"],
-                            text="")  # Send_type : default : add
+            rep.reply_media(page=page, mediatype="audio", message=message,
+                            filePath=[f"{pd.files}/test.mp3"])  # Send_type : default : add
         case "menu":
             rep.reply_menu(page=page, message=message)
+        case "fill":
+            helper.SmartFormFill(message=message)
+        case "yt.search":
+            helper.YoutubeAPISearch(page=page, message=message)
+        case "yt.audio":
+            helper.YoutubeAPIAUDIO(page=page, message=message)
+        case "yt.dlp.s":
+            helper.YT_DLP_Search(page=page, message=message)
 
         case _:
             print(text)

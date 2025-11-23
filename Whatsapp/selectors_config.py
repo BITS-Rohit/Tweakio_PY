@@ -433,3 +433,17 @@ def close_chat(page: Page) -> ElementHandle | None:
 def clear_chat(page: Page) -> ElementHandle | None:
     dialog = page.query_selector("div[role='dialog']")
     return dialog.query_selector("li:has-text('clear chat')") if dialog else None
+
+
+# ------------- Smart Form Filler --------------
+def get_FormList(page: Page):
+    return page.locator("form").get_by_role("list")
+
+def get_EmailCheckbox(page: Page):
+    return page.get_by_role(
+        "checkbox",
+        name=re.compile(f"record {Settings.EMAIL} as the email", re.I)
+    ).first
+
+def get_FormItems(page: Page):
+    return page.get_by_role("listitem").locator("div[jsmodel='CP1oW']")

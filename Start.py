@@ -7,12 +7,12 @@ import traceback
 
 from playwright.sync_api import Page
 
+from typing import Optional
 from Whatsapp import Brain
 from Whatsapp  import Extra as ex
 from Whatsapp  import SETTINGS, ___ as _
 from Whatsapp  import WebLogin as wl
 from Whatsapp.BrowserManager import getPage, close_browser
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 RESTART_DELAY = SETTINGS.RESTART_TIME
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     while True:
         try:
-            page : Page = None
+            page : Optional[Page]
             # Try getting a page up to 3 times
             for tries in range(3):
                 try:

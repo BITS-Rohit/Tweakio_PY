@@ -1,13 +1,14 @@
 import random
 from typing import Union
 
-from playwright.async_api import Locator, Position
+from playwright.async_api import Locator
 from playwright.sync_api import Page, ElementHandle
 
 from Whatsapp import selectors_config as sc, HumanAction as ha, Media as med, Menu as menu, pre_dir as pwd
 
 
 def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> bool:
+    """For Replying , To double-click on the message"""
     # print("In double edge click")
     try:
         if isinstance(message, Locator): message = message.element_handle()  # Make it just before the clicking
@@ -29,7 +30,7 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
 
         page.mouse.move(rel_x, rel_y)
         message.click(
-            position=Position(rel_x, rel_y),  # relative to element
+            position={"x": rel_x, "y": rel_y},
             click_count=2,
             delay=random.randint(38, 69),
             timeout=3000
@@ -37,10 +38,6 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
 
         # small pause to let UI react
         page.wait_for_timeout(timeout=500)
-
-        # message.click(click_count=3)
-        # print("Double click done")
-        # print("out of double edge click")
         return True
 
     except Exception as e:
@@ -49,7 +46,7 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
         return False
 
 
-def reply(page: Page, element: Union[ElementHandle,Locator], text: str) -> None:
+def reply(page: Page, element: Union[ElementHandle,Locator], text: str, copy_paste : bool = False) -> None:
     """
     This is a reply function to reply to the message.
 
@@ -59,13 +56,20 @@ def reply(page: Page, element: Union[ElementHandle,Locator], text: str) -> None:
         page (Page): Playwright page object.
         element (ElementHandle): The message element to reply to.
         text (str): The message text to send.
+        :param text:
+        :param element:
+        :param page:
+        :param copy_paste:
     """
-    if _reply_(page=page, message=element, text=text):
+    success = _reply_(page=page, message=element, text=text, copy_paste=copy_paste)
+
+    if success:
         page.keyboard.press("Enter")
-    else : print("Reply Returned False , Cant Press Enter")
+    else:
+        print("Reply Returned False, Can't Press Enter")
 
 
-def _reply_(page: Page, message: Union[ElementHandle,Locator], text: str, retry: int = 0) -> bool:
+def _reply_(page: Page, message: Union[ElementHandle,Locator], text: str,copy_paste : bool = False,  retry: int = 0) -> bool:
     """
     Core reply function with retries, without pressing Enter automatically.
 
@@ -80,11 +84,10 @@ def _reply_(page: Page, message: Union[ElementHandle,Locator], text: str, retry:
     """
     try:
         double_edge_click(page=page, message=message)
-
         inBox = sc.message_box(page)
         inBox.click(timeout=3000)
-
-        ha.human_send(page=page, element=inBox.element_handle(timeout=1000), text=text)
+        if copy_paste : ha.Copy_Paste(page=page, element=inBox.element_handle(timeout=1000), text=text)
+        else : ha.human_send(page=page, element=inBox.element_handle(timeout=1000), text=text)
         return True
     except Exception as e:
         if retry < 1:
@@ -93,7 +96,7 @@ def _reply_(page: Page, message: Union[ElementHandle,Locator], text: str, retry:
     return False
 
 
-def reply_media(page: Page, message: ElementHandle, text: str, file: list[str],
+def reply_media(page: Page, message: ElementHandle, filePath: list[str],text: str = "",
                 mediatype: str = "doc", send_type: str = "add") -> None:
     """
     Sends a reply with optional media attachment.
@@ -104,16 +107,16 @@ def reply_media(page: Page, message: ElementHandle, text: str, file: list[str],
         page (Page): Playwright page object.
         message (ElementHandle): The message element to reply to.
         text (str): Text to type before sending media.
-        file (list[str]): List of file paths to attach.
+        filePath (list[str]): List of file paths to attach.
         mediatype (str): Type of media ('doc', 'image', etc.)
         send_type (str): 'add' to attach normally, 'inject' to use InjectMedia.
     """
     success = _reply_(page=page, message=message, text=text)
     if success:
         if send_type == "inject":
-            med.InjectMedia(page=page, files=file, mediatype=mediatype)
+            med.InjectMedia(page=page, files=filePath, mediatype=mediatype)
         else:
-            med.AddMedia(page=page, file=file[0], mediatype=mediatype)
+            med.AddMedia(page=page, file=filePath[0], mediatype=mediatype)
         page.wait_for_timeout(random.randint(1123, 1491))
         page.keyboard.press("Enter")
     else:
@@ -130,11 +133,4 @@ def reply_menu(page: Page, message: Union[ElementHandle, Locator], file: str = f
         message (ElementHandle): The message element to reply to.
         file (str): File path for the menu image (default provided).
     """
-    reply_media(
-        page=page,
-        message=message,
-        text=menu.menu(),
-        send_type="add",
-        mediatype="image",
-        file=[file]
-    )
+    reply_media(page=page, message=message, text=menu.menu(), mediatype="image", filePath=[file])
