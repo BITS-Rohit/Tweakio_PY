@@ -104,8 +104,8 @@ pip install -U langchain langsmith
 1. Clone the repo:
 
 ```bash
-git clone https://github.com/yourusername/yourrepo.git
-cd yourrepo
+git clone https://github.com/BITS-Rohit/Tweakio_PY.git
+cd Tweakio_PY
 ```
 
 2. Copy and edit environment file:
@@ -136,6 +136,7 @@ python3 gui.py
 Example:
 
 ```env
+# This is main and every .env must have
 PYTHONUNBUFFERED=1;
 PROFILE=Tweakio; 
 BOT_NUMBER=76xxxxxxxxxx;

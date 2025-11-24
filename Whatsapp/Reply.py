@@ -1,8 +1,9 @@
+"""Reply Structure"""
 import random
 from typing import Union
 
 from playwright.async_api import Locator
-from playwright.sync_api import Page, ElementHandle
+from playwright.sync_api import Page, ElementHandle, Position
 
 from Whatsapp import selectors_config as sc, HumanAction as ha, Media as med, Menu as menu, pre_dir as pwd
 
@@ -20,21 +21,25 @@ def double_edge_click(page: Page, message: Union[ElementHandle, Locator]) -> boo
             print(f"Done scrolling : attempts : {attempts}")
 
         condition = sc.is_message_out(message)  # True = outgoing, False = incoming
-        # print(f"Condition : {condition}")
 
         box = message.bounding_box()
-
-        # Convert absolute coords -> element-relative
         rel_x = box["width"] * (0.2 if condition else 0.8)
         rel_y = box["height"] / 2
 
         page.mouse.move(rel_x, rel_y)
+        pos: Position = {"x": rel_x, "y": rel_y}
         message.click(
-            position={"x": rel_x, "y": rel_y},
+            position=pos,
             click_count=2,
             delay=random.randint(38, 69),
             timeout=3000
         )
+        # message.click(
+        #     position={"x": rel_x, "y": rel_y},
+        #     click_count=2,
+        #     delay=random.randint(38, 69),
+        #     timeout=3000
+        # )
 
         # small pause to let UI react
         page.wait_for_timeout(timeout=500)
