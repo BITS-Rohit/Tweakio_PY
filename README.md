@@ -66,21 +66,22 @@ parse quantifier & command -> forward remaining text to configured LLM -> send r
 Example:
 
 ```
- //weather Delhi
- //git commit "fix bug"
+ // ai Hi whastapp ? Any new Joke ?
 ```
 
 ---
 
 ## Requirements
 
-* Python 3.10+
+* Python 3.12+
 * Playwright + playwright-stealth
-* LangChain (optional, for advanced AI routing)
+* LangChain ( For Advanced AI Routing)
+* Camoufox Browser + BrowserForge Integration
 
 Setup:
 
 ```bash
+# ----- For Linux / Mac based -----
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -111,7 +112,7 @@ cd yourrepo
 
 ```bash
 cp Example.env.example .env
-# edit values in .env (never commit secrets)
+# edit values in .env 
 ```
 
 3. Install dependencies:
@@ -124,7 +125,8 @@ playwright install
 4. Start the bot:
 
 ```bash
-python Whatsapp/Start.py
+python3 gui.py
+# --- GUI has been added for easy accessibility ---- 
 ```
 
 ---
@@ -134,62 +136,61 @@ python Whatsapp/Start.py
 Example:
 
 ```env
-PROFILE=dev
-DEBUG=false
-MAX_CHAT=5
-REFRESH_TIME=5
-SLOW_MO=250
-GLOBAL_MODE=False
-RESTART_TIME=2
+PYTHONUNBUFFERED=1;
+PROFILE=Tweakio; 
+BOT_NUMBER=76xxxxxxxxxx;
+BOT_NUM_COUNTRY=India; #YOUR Region
+ADMIN_NUMBER=76xxxxxxxx;
+GEM_API_KEY=YOUR API;
+LANGCHAIN_API_KEY='Your API'
+GET_URL=https://api.agent.ai/v1/agent/<Your Agent>/webhook/<Your link>/status/<run_id>;
+LOGIN_METHOD=1;  #1 for scan , 2 for Code based -- Good for CLI Deployment
+YOUTUBE_API_KEY=Your API
 
-BOT_NUMBER="9183XXXXXXXX"
-BOT_NAME="Tweakio"
-ADMIN_NUMBER="9183XXXXXXXX"
-ADMIN_NAME="Admin"
+# we have more ENV Settings , but for now these are good enough
+# For Explore u can checkout in the Exmaple.env.example 
 
-GEM_API_KEY="YOUR_GOOGLE_GENAI_KEY"
-GROQ_API_KEY="YOUR_GROQ_OR_OPENROUTER_KEY"
-CSE_ID="YOUR_GOOGLE_CSE_ID"
-INTRO_IMG_URL="https://imgur.com/xyz.jpg"
-
-BROWSER_INIT_TIMEOUT=10000
-LOGIN_WAIT_TIME=180000
-LOGIN_METHOD=2
-
-GH_TOKEN="ghp_xxx"
-REPO_NAME="yourusername/yourrepo"
-BRANCH_NAME=main
+# Get ur GET/POST URL from -> https://agent.ai/
 ```
 
 ---
 
 ## Commands / Menu
 
-* `setmaxchat <n>` — limit concurrent chats
-* `menu` — show menu
-* `pause on` / `pause off` — admin-only
-* `showq` — display quantifier
-* `ban <phone>` / `unban <phone>` — block/unblock
-* `media send` — send media
-* `detect` — detect incoming media
-* `inject` — send as doc
-* `add <phone>` / `remove <phone>` — admin management
-* `setgc on/off` — toggle global mode
-* `banlist` — show banned chats
+* `menu` — show main menu (Under Construction)
+* `help` — display help commands 
+* `manual` — show manual instructions (Under construction)
+* `setgc` — toggle group chat mode
+* `showgc` — show group chat status
+* `setchat` — configure current chat settings
+* `showchat` — display no of Top chats it is checking to work
+* `add <user>` / `remove <user>` — manage admins (Good for when ur account is Global off but admins are still allowed to use ur bot)
 * `showlist` — show admin list
+* `banlist` — show banned users
 * `setq` — set quantifier
+* `showq` — display quantifier
+* `detect` — detect incoming media type ( Current : Txt , Image , Video) ( future -> Sticker , voice)
+* `inject` — send as document/payload
+* `send` — send Media with loaded content (Video is Under Construction)
+* `savevid` — save video media (Experimental , May give error/Fail)
+* `fill` — Fills any google form with info from pre-logs & Info.txt (In Google FormFiller Folder ) (Under Construction -> Need Google sign in fix)
+* `ai` — generate AI response ( Future Usage: Business Vault for fast business based act / Personal Vault for auto replying on user's behalf)
+* `audio` — Sends Audio File (Add the audio file + change path in commands)
+* `yt.search <query>` — search YouTube query ( Uses YOUTUBE API)
+* `yt.audio <url>` — download YouTube audio (Downloads the mp3 from yt url (Under Construction))
+* `yt.dlp.s` — advanced YouTube search (Uses YT-DLP package) (May Error/Fail)
 
 ---
 
 ## Architecture & Modules
 
 ```
+gui.py ( Starting point ) 
 /Whatsapp
-  ├─ Start.py
-  ├─ core/
-  ├─ integrations/
-  ├─ utils/
-  ├─ tests/
+    ├─ BrowserManager/
+        ├─
+    ├─ utils/
+    ├─ tests/
 Example.env.example
 requirements.txt
 README.md
@@ -211,32 +212,46 @@ Labels: `good first issue`, `help wanted`, `bug`, `enhancement`, `docs`
 
 ---
 
-## Testing & CI
+[//]: # ()
+[//]: # (## Testing & CI)
 
-Use `pytest` for tests.
-Example CI pipeline:
+[//]: # ()
+[//]: # (Use `pytest` for tests.)
 
-* Checkout
-* Setup Python
-* Install deps
-* Install Playwright
-* Run tests
+[//]: # (Example CI pipeline:)
 
----
+[//]: # ()
+[//]: # (* Checkout)
 
-## Security & Privacy
+[//]: # (* Setup Python)
 
-* Never commit `.env` or keys
-* Rate-limit sensitive actions
-* Rotate API keys regularly
+[//]: # (* Install deps)
 
----
+[//]: # (* Install Playwright)
+
+[//]: # (* Run tests)
+
+[//]: # ()
+[//]: # (---)
+
+[//]: # (## Security & Privacy)
+
+[//]: # ()
+[//]: # (* Never commit `.env` or keys)
+
+[//]: # (* Rate-limit sensitive actions)
+
+[//]: # (* Rotate API keys regularly)
+
+[//]: # ()
+[//]: # (---)
 
 ## Roadmap
-
-* Async upload/download
 * Profile automation
-* YouTube & Google live search
+* Google live search
+* Instant Bussiness & Customer Service integration
+* Personal Vault integration
+* Auto-Reply integration
 * Plugin system for agents
 
 ---
